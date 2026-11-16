@@ -1,9 +1,0 @@
-Figure 1. Annual MTA-reported elevator availability and calendar continuity, 2015–2026. The 2026 observation covers January–October. Annual values describe the asset composition observed in each year.
-
-Figure 2. Spatial distribution of long-observed elevator-equipped station complexes. Symbols are mutually exclusive: persistent low continuity indicates membership in the lowest calendar-continuity quartile in at least 50% of observed months; strong reclassification indicates an increase of at least 0.15 in low-reliability recurrence; both diagnostics indicates that both conditions are met. Station-complex coordinates are from MTA Subway Stations and Complexes; borough boundaries are from the New York City Department of City Planning.
-
-Figure 3. Difference in station-complex low-reliability recurrence between calendar continuity and MTA-reported availability. Complexes are ordered by the recurrence difference. Positive bars indicate more frequent low-reliability classification when denominator-excluded calendar time is retained. Missing MTA-reported values are excluded from the corresponding recurrence denominator.
-
-Figure 4. Spearman rank correlation of station-complex MTA-reported availability in adjacent years. Complexes must have at least six observed months in each year. The 2025–2026 pair uses January–October 2026.
-
-Figure 5. Monthly Kendall rank concordance between borough rankings derived from aggregated elevator MTA-reported availability and MTA accessible-platform availability, 2018–2026. A value of 1 indicates identical borough ordering.
