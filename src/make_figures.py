@@ -6,9 +6,11 @@ No network access is required when the frozen station-coordinate snapshot is use
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
 import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
@@ -120,6 +122,112 @@ def spatial_figure(ch: pd.DataFrame, stations_path: Path, out: Path) -> None:
     plt.close()
 
 
+
+def _draw_geometry(ax: plt.Axes, geometry: dict) -> None:
+    """Draw Polygon/MultiPolygon GeoJSON without GIS-library dependencies."""
+    typ = geometry.get("type")
+    coords = geometry.get("coordinates", [])
+    polygons = [coords] if typ == "Polygon" else coords if typ == "MultiPolygon" else []
+    for polygon in polygons:
+        if not polygon:
+            continue
+        exterior = np.asarray(polygon[0], dtype=float)
+        if exterior.ndim != 2 or exterior.shape[1] != 2:
+            continue
+        ax.add_patch(Polygon(
+            exterior, closed=True, facecolor="0.96", edgecolor="0.65", linewidth=0.55
+        ))
+        for ring in polygon[1:]:
+            hole = np.asarray(ring, dtype=float)
+            if hole.ndim == 2 and hole.shape[1] == 2:
+                ax.add_patch(Polygon(
+                    hole, closed=True, facecolor="white", edgecolor="0.75", linewidth=0.3
+                ))
+
+
+def spatial_map(
+    chronic: pd.DataFrame,
+    stations_path: Path,
+    borough_geojson: Path,
+    output: Path,
+) -> None:
+    """Map long-observed complexes from official MTA complex centroids."""
+    st = pd.read_csv(stations_path)
+    aliases = {
+        "Complex ID": "complex_id", "Stop Name": "stop_name",
+        "Borough": "borough", "Latitude": "latitude", "Longitude": "longitude",
+    }
+    st = st.rename(columns={k: v for k, v in aliases.items() if k in st.columns})
+    required = {"complex_id", "stop_name", "borough", "latitude", "longitude"}
+    missing = required.difference(st.columns)
+    if missing:
+        raise ValueError(f"Station coordinate file missing columns: {sorted(missing)}")
+    for c in ("complex_id", "latitude", "longitude"):
+        st[c] = pd.to_numeric(st[c], errors="coerce")
+    st = st.dropna(subset=["complex_id", "latitude", "longitude"]).drop_duplicates("complex_id")
+
+    ch = chronic.copy()
+    ch["Station Complex MRN"] = pd.to_numeric(ch["Station Complex MRN"], errors="coerce")
+    m = ch.merge(st, left_on="Station Complex MRN", right_on="complex_id", how="inner")
+    if len(m) < 0.95 * len(ch):
+        raise ValueError(
+            f"Only {len(m)}/{len(ch)} chronicity complexes mapped to official centroids"
+        )
+    m["chronic"] = m["continuity_bq_share"] >= 0.50
+    m["reclassified"] = m["bq_reclassification_delta"] >= 0.15
+
+    with open(borough_geojson, "r", encoding="utf-8") as fh:
+        gj = json.load(fh)
+
+    fig, ax = plt.subplots(figsize=(6.1, 6.4))
+    for feature in gj.get("features", []):
+        _draw_geometry(ax, feature.get("geometry", {}))
+
+    ax.scatter(
+        m.loc[~m["chronic"], "longitude"], m.loc[~m["chronic"], "latitude"],
+        s=17, alpha=0.38, label="Other long-observed complexes", zorder=3,
+    )
+    ax.scatter(
+        m.loc[m["chronic"], "longitude"], m.loc[m["chronic"], "latitude"],
+        s=52, alpha=0.88, label="Lowest quartile in >=50% of months", zorder=4,
+    )
+    ax.scatter(
+        m.loc[m["reclassified"], "longitude"], m.loc[m["reclassified"], "latitude"],
+        s=82, marker="x", linewidths=1.3,
+        label="Reclassification increase >=0.15", zorder=5,
+    )
+
+    for cid in (328, 620, 635):
+        rr = m[m["complex_id"] == cid]
+        if len(rr):
+            r = rr.iloc[0]
+            ax.annotate(
+                f"{r['stop_name']} ({int(cid)})",
+                (r["longitude"], r["latitude"]), xytext=(5, 4),
+                textcoords="offset points", fontsize=7.2, zorder=6,
+            )
+
+    y0 = m["latitude"].min() + 0.025 * (m["latitude"].max() - m["latitude"].min())
+    x0 = m["longitude"].min() + 0.035 * (m["longitude"].max() - m["longitude"].min())
+    km5_lon = 5.0 / (111.32 * np.cos(np.deg2rad(float(m["latitude"].median()))))
+    ax.plot([x0, x0 + km5_lon], [y0, y0], linewidth=1.5, color="black", zorder=7)
+    ax.text(x0 + km5_lon / 2, y0 + 0.008, "5 km", ha="center", fontsize=7.5)
+    ax.annotate(
+        "N", xy=(0.95, 0.96), xytext=(0.95, 0.88),
+        xycoords="axes fraction", textcoords="axes fraction",
+        ha="center", va="center",
+        arrowprops=dict(arrowstyle="-|>", linewidth=0.9), fontsize=8.5,
+    )
+    ax.set_xlim(-74.06, -73.73)
+    ax.set_ylim(40.55, 40.93)
+    ax.set_aspect(1 / np.cos(np.deg2rad(40.74)))
+    ax.set_axis_off()
+    ax.legend(frameon=False, loc="lower right", fontsize=7.2)
+    plt.tight_layout()
+    plt.savefig(output, dpi=300, format="png", bbox_inches="tight")
+    plt.close()
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", type=Path, required=True)
@@ -138,6 +246,14 @@ def main() -> None:
     ch = pd.read_csv(args.results / "complex_chronicity.csv")
     rs = pd.read_csv(args.results / "rank_stability.csv")
     vp = validation_points(args.main, args.platform)
+
+    if bool(args.stations) != bool(args.borough_boundaries):
+        raise ValueError("Provide both --stations and --borough-boundaries, or neither")
+    if args.stations:
+        spatial_map(
+            ch, args.stations, args.borough_boundaries,
+            args.output / "Fig00_spatial_chronicity_map.png",
+        )
 
     # Fig. 1 — spatial chronicity and metric-induced reclassification.
     spatial_figure(ch, args.stations, args.output / "fig1_spatial.png")
