@@ -1,0 +1,4 @@
+threshold,quantile,n_complexes,rho_chronic,n_delta_ge_0_15,n_continuity_low_ge_0_5,complex_ids_delta_ge_0_15
+bottom quintile,0.2,113,0.8141229822329548,5,3,222;328;602;620;635
+bottom quartile,0.25,113,0.8768721293289657,3,7,328;620;635
+bottom tercile,0.3333333333333333,113,0.9060591305857562,3,19,328;620;635
