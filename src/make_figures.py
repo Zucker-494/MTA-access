@@ -39,17 +39,19 @@ def finish(ax: plt.Axes, path: Path, grid: bool = True) -> None:
     plt.close()
 
 
-def _draw_geometry(ax: plt.Axes, geometry: dict) -> None:
-    """Draw Polygon/MultiPolygon boundaries without a GIS dependency."""
+def _geometry_exteriors(geometry: dict) -> list[np.ndarray]:
+    """Return exterior rings for Polygon/MultiPolygon GeoJSON geometries."""
     typ = geometry.get("type")
     coords = geometry.get("coordinates", [])
     polygons = [coords] if typ == "Polygon" else coords if typ == "MultiPolygon" else []
+    out = []
     for polygon in polygons:
         if not polygon:
             continue
         exterior = np.asarray(polygon[0], dtype=float)
         if exterior.ndim == 2 and exterior.shape[1] == 2:
-            ax.plot(exterior[:, 0], exterior[:, 1], linewidth=0.55, zorder=1)
+            out.append(exterior)
+    return out
 
 
 def spatial_figure(
@@ -95,14 +97,22 @@ def spatial_figure(
         gj = json.load(fh)
 
     fig, ax = plt.subplots(figsize=(7.4, 6.0))
+    bx, by = [], []
     for feature in gj.get("features", []):
-        _draw_geometry(ax, feature.get("geometry", {}))
+        for exterior in _geometry_exteriors(feature.get("geometry", {})):
+            bx.extend(exterior[:, 0].tolist())
+            by.extend(exterior[:, 1].tolist())
+            bx.append(np.nan)
+            by.append(np.nan)
+    ax.plot(bx, by, linewidth=0.55, alpha=0.35, zorder=1)
 
+    # Sizes are deliberately small enough to avoid point-on-point overlap in
+    # the dense Manhattan portion of the map. Categories are mutually exclusive.
     specs = [
-        ("Other long-observed complex", "o", 17),
-        ("Persistent low continuity", "^", 48),
-        ("Strong reclassification", "s", 48),
-        ("Both diagnostics", "*", 80),
+        ("Other long-observed complex", "o", 2),
+        ("Persistent low continuity", "^", 6),
+        ("Strong reclassification", "s", 6),
+        ("Both diagnostics", "*", 9),
     ]
     for label, marker, size in specs:
         g = z[z["map_category"] == label]
@@ -151,6 +161,7 @@ def spatial_figure(
         loc="upper left",
         bbox_to_anchor=(1.01, 1.0),
         borderaxespad=0,
+        markerscale=3.0,
     )
     plt.tight_layout()
     plt.savefig(out, dpi=300, format="png")
@@ -208,25 +219,15 @@ def main() -> None:
     ax.tick_params(axis="x", rotation=45)
     finish(ax, args.output / "fig2_metric_gap.png")
 
-    # Figure 3 — chronicity reclassification. Names remain in manuscript text,
-    # so the plot carries no labels that could obscure observations.
-    fig, ax = plt.subplots(figsize=(5.4, 4.8))
-    ax.scatter(
-        ch["reported_bq_share"],
-        ch["continuity_bq_share"],
-        s=26,
-        alpha=0.72,
-    )
-    hi = max(
-        ch["reported_bq_share"].max(),
-        ch["continuity_bq_share"].max(),
-    ) * 1.04
-    ax.plot([0, hi], [0, hi], "--", linewidth=1.0, label="No change")
-    ax.set_xlim(0, hi)
-    ax.set_ylim(0, hi)
-    ax.set_xlabel("Low-reliability recurrence\nMTA-reported availability")
-    ax.set_ylabel("Low-reliability recurrence\ncalendar continuity")
-    ax.legend(frameon=False, loc="lower right")
+    # Figure 3 — sorted recurrence difference. Bars occupy unique x positions,
+    # avoiding point-on-point and label-on-point overlap.
+    d = ch.sort_values("bq_reclassification_delta").reset_index(drop=True)
+    fig, ax = plt.subplots(figsize=(6.4, 4.0))
+    x = np.arange(len(d))
+    ax.bar(x, d["bq_reclassification_delta"], width=0.72)
+    ax.set_xlabel("Station complexes ordered by recurrence difference")
+    ax.set_ylabel("Calendar − MTA-reported recurrence")
+    ax.set_xticks([])
     finish(ax, args.output / "fig3_reclassification.png")
 
     # Figure 4 — adjacent-year persistence for the operator-reported baseline.
