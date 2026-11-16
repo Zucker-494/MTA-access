@@ -1,6 +1,11 @@
 name: Reproduce JTG analysis
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/run-jtg-reproduction"
   workflow_dispatch:
     inputs:
       data_mode:
