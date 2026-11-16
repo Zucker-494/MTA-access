@@ -85,6 +85,72 @@ def complex_month(e: pd.DataFrame) -> pd.DataFrame:
     return x
 
 
+
+def chronicity(cm: pd.DataFrame, min_months: int = 36) -> pd.DataFrame:
+    """Frequency with which a complex falls in each metric's monthly bottom quartile."""
+    x = cm.copy()
+    for metric in ["reported_availability", "calendar_continuity"]:
+        x[f"{metric}_pct_rank"] = x.groupby("Month")[metric].rank(
+            method="average", pct=True, ascending=True
+        )
+        x[f"{metric}_bottom_quartile"] = x[f"{metric}_pct_rank"] <= 0.25
+    out = x.groupby(
+        ["Station Complex MRN", "Station Complex Name", "Borough"], dropna=False
+    ).agg(
+        n_months=("Month", "nunique"),
+        reported_bq_share=("reported_availability_bottom_quartile", "mean"),
+        continuity_bq_share=("calendar_continuity_bottom_quartile", "mean"),
+        mean_excluded_share=("excluded_share", "mean"),
+        mean_third_party_share=("third_party_share", "mean"),
+    ).reset_index()
+    out = out[out["n_months"] >= min_months].copy()
+    out["bq_reclassification_delta"] = (
+        out["continuity_bq_share"] - out["reported_bq_share"]
+    )
+    return out
+
+
+def chronicity_sensitivity(cm: pd.DataFrame) -> pd.DataFrame:
+    """Check that the spatial result is stable to longitudinal-coverage choice."""
+    rows = []
+    for min_months in [24, 36, 48, 60, 72]:
+        c = chronicity(cm, min_months)
+        rho, _ = spearmanr(c["reported_bq_share"], c["continuity_bq_share"])
+        delta = c["bq_reclassification_delta"]
+        rows.append([
+            min_months, len(c), rho, delta.max(),
+            int((delta >= 0.15).sum()),
+            int((c["continuity_bq_share"] >= 0.50).sum()),
+        ])
+    return pd.DataFrame(rows, columns=[
+        "min_months", "n_complexes", "rho_chronic", "max_delta",
+        "n_delta_ge_0_15", "n_continuity_bq_ge_0_5",
+    ])
+
+
+def loss_decomposition_2025(e: pd.DataFrame) -> pd.DataFrame:
+    """Decompose calendar service loss into within-denominator and excluded time."""
+    x = e[e["Month"].dt.year == 2025].copy()
+    x["within_reported_loss"] = (
+        x["24-Hour Total Hours"] - x["24-Hour Hours Available"]
+    ).clip(lower=0)
+    rows = []
+    for scope, g in [("System", x), *list(x.groupby("Borough"))]:
+        calendar = g["calendar_hours"].sum()
+        within = g["within_reported_loss"].sum()
+        excluded = g["excluded_hours"].sum()
+        available = g["24-Hour Hours Available"].sum()
+        total_loss = within + excluded
+        rows.append({
+            "scope": scope,
+            "available_share": available / calendar,
+            "within_reported_loss_share": within / calendar,
+            "excluded_loss_share": excluded / calendar,
+            "excluded_fraction_of_total_loss": excluded / total_loss,
+        })
+    return pd.DataFrame(rows)
+
+
 def rank_stability(cm: pd.DataFrame) -> pd.DataFrame:
     x = cm.copy()
     x["year"] = x["Month"].dt.year
@@ -198,7 +264,7 @@ def main() -> None:
     annual_metrics(e, "Managed By").to_csv(out/"management_yearly.csv", index=False)
     annual_metrics(e, "Borough").to_csv(out/"borough_yearly.csv", index=False)
     cm.to_csv(out/"complex_month.csv", index=False)
-    rank_stability(cm).to_csv(out/"rank_stability.csv", index=False)
+    chronicity(cm, 36).to_csv(out/"complex_chronicity.csv", index=False)\n    chronicity_sensitivity(cm).to_csv(out/"chronicity_sensitivity.csv", index=False)\n    loss_decomposition_2025(e).to_csv(out/"loss_decomposition_2025.csv", index=False)\n    rank_stability(cm).to_csv(out/"rank_stability.csv", index=False)
     management_models(e).to_csv(out/"management_regression.csv", index=False)
     platform_validation(e, args.platform).to_csv(out/"platform_validation.csv", index=False)
 
