@@ -1,66 +1,117 @@
-# MTA-access — longitudinal subway elevator reliability
+# MTA-access — longitudinal subway elevator service continuity
 
-This repository contains a CPU-only reproducible analysis of public MTA elevator reliability data.
+This repository contains a CPU-only, reproducible analysis of public Metropolitan Transportation Authority (MTA) elevator reliability data.
 
-## Current paper focus
-**Reliability or continuity? Long-term spatial inequalities in subway elevator service under denominator exclusions and heterogeneous maintenance governance**
+## Target paper
 
-The project deliberately does **not** model passenger OD accessibility from marginal elevator uptime alone. A recent public NYC step-free-network project already combines vertical-path redundancy and OD flow; this repository instead focuses on a distinct longitudinal measurement problem:
+Primary target: **Journal of Transport Geography**
 
-1. whether station-complex reliability disadvantage persists over 2015–2026;
-2. how excluding calendar time from the reported availability denominator changes longitudinal and spatial diagnosis;
-3. whether third-party-managed elevators show a persistent availability gap after time and station-complex controls;
-4. whether asset-level and official accessible-platform metrics produce the same spatial ordering.
+Working title:
 
-## Verified data
-Official MTA datasets:
-- Elevator and escalator availability, beginning 2015: https://data.ny.gov/d/rc78-7x78
-- Accessible station platform availability, beginning 2018: https://data.ny.gov/d/thh2-syn7
+**Reliability or continuity? How measurement changes the geography of New York subway elevator service**
 
-Local analysis used the 2026-11-16 downloads:
-- `MTA_NYCT_Subway_Elevator_and_Escalator_Availability__Beginning_2015_20261116.csv`
-- `MTA_Subway_Accessible_Station_Platform_Availability__Beginning_2018_20261116.csv`
+The paper has one primary message: **the denominator used to measure operational reliability can change the spatial diagnosis of persistent service disadvantage when denominator-excluded time is geographically concentrated.**
 
-Raw files are not committed. The analysis covers 46,400 elevator asset-month observations, 420 elevators and 133 station complexes from January 2015 through October 2026.
+The project deliberately does not claim novelty for passenger OD impacts of elevator failures. Existing public work already combines elevator vertical-path redundancy with passenger flows. The present study addresses a different longitudinal measurement question.
+
+## Research questions
+
+1. How large and spatially variable is the gap between MTA-reported in-service elevator availability and calendar service continuity?
+2. Does denominator choice change which station complexes are identified as chronically low-reliability places?
+3. Are relative station-complex reliability rankings persistent across years?
+4. Do asset-level and official accessible-platform indicators yield the same spatial ordering?
+5. As a secondary explanatory analysis, is maintenance governance associated with reported asset availability after temporal and station-complex controls?
+
+## Data
+
+Official sources:
+
+- MTA NYCT Subway Elevator and Escalator Availability: Beginning 2015  
+  https://data.ny.gov/d/rc78-7x78
+- MTA Subway Accessible Station Platform Availability: Beginning 2018  
+  https://data.ny.gov/d/thh2-syn7
+- MTA Subway Stations and Complexes  
+  https://data.ny.gov/d/5f5g-n3cz
+- NYC Department of City Planning Borough Boundaries  
+  https://data.cityofnewyork.us/d/gthc-hcne
+
+The frozen submission analysis uses the 2026-11-16 snapshots. The panel contains:
+
+- **46,400 elevator-month observations**
+- **420 elevator assets**
+- **133 station complexes**
+- January 2015 through October 2026
+- zero duplicate equipment-month keys
+
+The repository also supports a manual workflow that downloads the latest official releases for prospective reproduction. The latest-data verification run on 2026-11-16 produced the same SHA-256 hashes as the frozen primary MTA snapshots, so the manuscript results did not require updating.
+
+## Measurement framework
+
+MTA-reported in-service availability:
+
+`A = hours available / MTA-reported denominator hours`
+
+Calendar service continuity:
+
+`C = hours available / calendar hours in the asset-month`
+
+Calendar continuity is a complementary asset-service measure. It is **not** labelled “true availability” and is **not** interpreted as a passenger-level probability of completing a step-free journey.
+
+NYC accessibility reporting notes that elevator availability excludes elevators out for planned replacements. The analysis asks whether retaining denominator-excluded calendar time changes the geography of longitudinal service monitoring.
 
 ## Principal verified results
-- 2025 systemwide reported in-service elevator availability: **97.61%**.
-- 2025 calendar service continuity: **90.20%**.
-- Difference: **7.41 percentage points**.
-- Mean adjacent-year Spearman correlation of station-complex availability ranks: **0.562**.
-- Third-party coefficient with month + station-complex fixed effects: **-4.99 pp** (clustered SE 1.80 pp; p=0.00547).
-- Mixed-management-complex sensitivity coefficient: **-4.92 pp** (p=0.00628).
-- Asset-level vs official accessible-platform availability: Spearman rho **0.697**.
-- Exact four-borough ranking agreement: **11/105 months (10.5%)**.
 
-These results are descriptive/associational. The third-party coefficient is not interpreted causally.
+- 2025 reported systemwide elevator availability: **97.61%**
+- 2025 calendar service continuity: **90.20%**
+- difference: **7.41 percentage points**
+- 2025 Bronx gap: **15.77 percentage points**
+- mean adjacent-year Spearman correlation of station-complex reported-availability rankings: **0.562**
+- third-party coefficient with month and station-complex fixed effects: **−4.99 pp** (secondary associational result)
+- asset-level vs official accessible-platform availability: Spearman rho **0.697**
+- exact four-borough ranking agreement: **11/105 months (10.5%)**
 
-## Key measurement distinction
-`reported availability = available hours / MTA-reported denominator hours`
+Management results are observational and are not interpreted causally.
 
-`calendar service continuity = available hours / calendar hours in the asset-month`
+## Reproducibility
 
-The calendar measure retains periods omitted from the reported denominator. NYC's 2025 AccessibleNYC report explicitly notes that elevator availability rates do not include elevators out for planned replacements. Calendar continuity is therefore used as a **sensitivity measure of asset service continuity**, not as passenger-level step-free journey success.
-
-## Reproduce locally
-Place the two raw CSV files under `data/raw/`, then:
+Install dependencies and run the analysis locally:
 
 ```bash
 python -m pip install -r requirements.txt
 python -m unittest discover -s tests -v
+
 python src/longitudinal_analysis.py \
-  --main data/raw/MTA_NYCT_Subway_Elevator_and_Escalator_Availability__Beginning_2015_20261116.csv \
-  --platform data/raw/MTA_Subway_Accessible_Station_Platform_Availability__Beginning_2018_20261116.csv \
+  --main <elevator_availability.csv> \
+  --platform <platform_availability.csv> \
   --output outputs/real_analysis
 ```
 
-## Repository outputs
-- `results/verified_results.md`: current scientific result summary.
-- `results/system_yearly.csv`: annual reported availability vs calendar continuity.
-- `results/management_regression.csv`: fixed-effects management association.
-- `results/rank_stability.csv`: adjacent-year spatial persistence.
-- `results/platform_validation.csv`: cross-scale validation summary.
-- `figures/README.md`: six final 300 dpi figure specifications.
+Figure generation is separated from numerical analysis and exports 300 dpi PNG files.
 
-## GitHub Actions
-No workflow is configured. **GitHub Actions usage remains zero for this project.** All code is tested locally before being committed.
+## GitHub Actions policy
+
+The workflow `.github/workflows/reproduce-jtg.yml` is **manual-only** (`workflow_dispatch`). Ordinary code and manuscript commits do not trigger computation.
+
+The workflow is used only after local validation to:
+
+1. select the frozen data or download the latest official MTA releases;
+2. run syntax checks and unit tests;
+3. reproduce the numerical analysis;
+4. regenerate the 300 dpi figures;
+5. verify DPI metadata and record input hashes;
+6. upload a reproducibility artifact.
+
+A complete latest-data run succeeded on 2026-11-16. Earlier development failures are retained in the GitHub Actions history for transparency; they were used to identify workflow/runtime issues before the final successful run.
+
+## Manuscript
+
+The `manuscript/` directory contains the JTG-oriented Elsevier LaTeX workspace:
+
+- `manuscript_blind.tex` — double-anonymized manuscript
+- section source files
+- `references.bib`
+- `highlights.txt`
+- `title_page_template.tex`
+- `build_submission.py` — prepares a flat Editorial Manager source directory
+
+The manuscript uses Elsevier `elsarticle` with author-year references. The title page remains separate from the anonymous manuscript for double-anonymized review.
