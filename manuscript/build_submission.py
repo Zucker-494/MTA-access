@@ -23,6 +23,7 @@ TEXT_FILES = [
     "cover_letter_template.txt",
     "CRediT_template.txt",
     "submission_checklist.md",
+    "supplementary_material.tex",
 ]
 
 MAIN_FIGURES = [
@@ -30,12 +31,12 @@ MAIN_FIGURES = [
     "fig2_metric_gap.png",
     "fig3_reclassification.png",
     "fig4_persistence.png",
-    "fig5_validation.png",
+    "fig5_concordance.png",
 ]
 
 SUPPLEMENTARY_FIGURES = [
-    "figS1_management_availability.png",
-    "figS2_borough_metric_gap.png",
+    "figS1_management_coefficients.png",
+    "figS2_calendar_persistence.png",
 ]
 
 
