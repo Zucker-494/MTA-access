@@ -1,0 +1,9 @@
+Figure 1. Spatial distribution of long-observed elevator-equipped station complexes. Open circles indicate complexes falling in the lowest calendar-continuity quartile in at least 50% of observed months; crosses indicate a rise of at least 0.15 in bottom-quartile recurrence when calendar continuity replaces reported availability. The map includes a 5 km scale bar and north arrow.
+
+Figure 2. Annual MTA-reported in-service elevator availability and calendar service continuity, 2015–2026. The 2026 observation covers January–October. Calendar continuity retains calendar time excluded from the reported denominator.
+
+Figure 3. Station-complex recurrence in the monthly lowest reliability quartile under reported availability and calendar service continuity. Points above the diagonal are classified as low-reliability more often when denominator-excluded hours are retained.
+
+Figure 4. Spearman rank correlation of station-complex reported availability in adjacent years. Only complexes with at least six observed months in each year are included.
+
+Figure 5. Comparison of aggregated elevator reported availability and MTA accessible-platform availability during the overlapping 2018–2026 period. Each point is a borough–month.
