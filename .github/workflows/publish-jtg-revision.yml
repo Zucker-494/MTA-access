@@ -1,0 +1,136 @@
+name: Publish final JTG revision outputs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/run-jtg-final-revision"
+
+permissions:
+  contents: write
+
+jobs:
+  reproduce-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Download official spatial references
+        run: |
+          mkdir -p action_input
+          curl --fail --location --retry 3 --retry-delay 2             'https://data.ny.gov/resource/5f5g-n3cz.csv?$limit=500'             -o action_input/station_complexes_raw.csv
+          curl --fail --location --retry 3 --retry-delay 2             'https://data.cityofnewyork.us/resource/gthc-hcne.geojson?$limit=5'             -o action_input/nyc_borough_boundaries.geojson
+          python src/prepare_station_coordinates.py             --input action_input/station_complexes_raw.csv             --output action_input/station_complex_coordinates.csv
+
+      - name: Validate code
+        run: |
+          python -m py_compile src/audit.py
+          python -m py_compile src/longitudinal_analysis.py
+          python -m py_compile src/make_figures.py
+          python -m py_compile src/prepare_station_coordinates.py
+          python -m unittest discover -s tests -v
+
+      - name: Run frozen numerical analysis
+        run: |
+          rm -rf action_output
+          python src/longitudinal_analysis.py             --main data/MTA_NYCT_Subway_Elevator_and_Escalator_Availability__Beginning_2015_20261116.csv             --platform data/MTA_Subway_Accessible_Station_Platform_Availability__Beginning_2018_20261116.csv             --output action_output/results
+
+      - name: Assert corrected results
+        run: |
+          python - <<'PY'
+          import pandas as pd
+
+          c = pd.read_csv("action_output/results/complex_chronicity.csv")
+          sf = c.loc[c["Station Complex MRN"].eq(635)].iloc[0]
+          assert abs(sf["reported_bq_share"] - 0.1238938053) < 1e-8
+          assert abs(sf["continuity_bq_share"] - 0.2957746479) < 1e-8
+
+          s = pd.read_csv("action_output/results/chronicity_sensitivity.csv")
+          assert s["rho_chronic"].min() > 0.862
+          assert s["rho_chronic"].max() < 0.878
+          assert (s["n_delta_ge_0_15"] == 3).all()
+
+          r = pd.read_csv("action_output/results/rank_stability.csv")
+          assert set(r["metric"]) == {"reported_availability", "calendar_continuity"}
+          assert set(r["month_window"]) == {"available year", "Jan-Oct"}
+
+          p = pd.read_csv("action_output/results/platform_comparison.csv")
+          assert int(p.iloc[0]["months_with_exact_four_borough_ranking"]) == 11
+          assert int(p.iloc[0]["months_total"]) == 105
+
+          b = pd.read_csv("action_output/results/balanced_panel_system_yearly.csv")
+          assert int(b["balanced_equipment_count"].iloc[0]) == 260
+
+          x = pd.read_csv("action_output/results/borough_excluded_concentration_2025.csv")
+          bx = x.loc[x["borough"].eq("Bronx")].iloc[0]
+          assert bx["top3_share"] > 0.969 and bx["top3_share"] < 0.970
+          print("Corrected-result assertions passed.")
+          PY
+
+      - name: Generate revised 300 dpi figures
+        run: |
+          python src/make_figures.py             --results action_output/results             --main data/MTA_NYCT_Subway_Elevator_and_Escalator_Availability__Beginning_2015_20261116.csv             --platform data/MTA_Subway_Accessible_Station_Platform_Availability__Beginning_2018_20261116.csv             --stations action_input/station_complex_coordinates.csv             --borough-boundaries action_input/nyc_borough_boundaries.geojson             --output action_output/figures
+
+      - name: Verify figure files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+
+          expected = [
+              "fig1_spatial.png",
+              "fig2_metric_gap.png",
+              "fig3_reclassification.png",
+              "fig4_persistence.png",
+              "fig5_concordance.png",
+              "figS1_management_coefficients.png",
+              "figS2_calendar_persistence.png",
+          ]
+          root = Path("action_output/figures")
+          assert sorted(p.name for p in root.glob("*.png")) == sorted(expected)
+          for name in expected:
+              im = Image.open(root / name)
+              dpi = im.info.get("dpi", (0, 0))
+              assert min(dpi) >= 299, (name, dpi)
+              print(name, im.size, dpi)
+          PY
+
+      - name: Record input provenance
+        run: |
+          sha256sum             data/MTA_NYCT_Subway_Elevator_and_Escalator_Availability__Beginning_2015_20261116.csv             data/MTA_Subway_Accessible_Station_Platform_Availability__Beginning_2018_20261116.csv             action_input/station_complex_coordinates.csv             action_input/nyc_borough_boundaries.geojson             > action_output/input_sha256.txt
+
+      - name: Publish verified outputs
+        run: |
+          rm -f             figures/fig5_validation.png             figures/figS1_management_availability.png             figures/figS2_borough_metric_gap.png             results/platform_validation.csv
+          cp action_output/figures/*.png figures/
+          cp action_output/results/*.csv results/
+          cp action_output/input_sha256.txt results/input_sha256.txt
+          cp action_input/station_complex_coordinates.csv data/station_complex_coordinates.csv
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add figures results data/station_complex_coordinates.csv
+          git add -u figures results
+          git commit -m "Publish corrected JTG analysis and overlap-free figures"
+          git push
+
+      - name: Upload revision artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jtg-final-revision
+          path: |
+            action_output
+            action_input/station_complex_coordinates.csv
+          if-no-files-found: error
+          retention-days: 30
