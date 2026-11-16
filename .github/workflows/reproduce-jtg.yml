@@ -1,0 +1,89 @@
+name: Reproduce JTG analysis
+
+on:
+  workflow_dispatch:
+    inputs:
+      data_mode:
+        description: "Use the frozen submission snapshot or download the latest MTA releases"
+        required: true
+        default: "frozen"
+        type: choice
+        options:
+          - frozen
+          - latest
+
+permissions:
+  contents: read
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install analysis dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Select frozen snapshot
+        if: inputs.data_mode == 'frozen'
+        run: |
+          echo "MAIN=data/MTA_NYCT_Subway_Elevator_and_Escalator_Availability__Beginning_2015_20261116.csv" >> "$GITHUB_ENV"
+          echo "PLATFORM=data/MTA_Subway_Accessible_Station_Platform_Availability__Beginning_2018_20261116.csv" >> "$GITHUB_ENV"
+
+      - name: Download latest official MTA data
+        if: inputs.data_mode == 'latest'
+        run: |
+          mkdir -p data/latest
+          curl --fail --location --retry 3 \
+            "https://data.ny.gov/api/v3/views/rc78-7x78/export.csv?accessType=DOWNLOAD" \
+            -o data/latest/elevator_availability.csv
+          curl --fail --location --retry 3 \
+            "https://data.ny.gov/api/v3/views/thh2-syn7/export.csv?accessType=DOWNLOAD" \
+            -o data/latest/platform_availability.csv
+          echo "MAIN=data/latest/elevator_availability.csv" >> "$GITHUB_ENV"
+          echo "PLATFORM=data/latest/platform_availability.csv" >> "$GITHUB_ENV"
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Reproduce numerical analysis
+        run: |
+          rm -rf action_output
+          python src/longitudinal_analysis.py \
+            --main "$MAIN" \
+            --platform "$PLATFORM" \
+            --output action_output/results
+
+      - name: Reproduce 300 dpi figures
+        run: |
+          python src/make_figures.py \
+            --results action_output/results \
+            --main "$MAIN" \
+            --platform "$PLATFORM" \
+            --output action_output/figures_300dpi
+
+      - name: Record provenance
+        run: |
+          sha256sum "$MAIN" "$PLATFORM" > action_output/input_sha256.txt
+          {
+            echo "data_mode=${{ inputs.data_mode }}"
+            echo "run_commit=$GITHUB_SHA"
+            python --version
+          } > action_output/run_info.txt
+
+      - name: Upload reproducibility artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jtg-reproduction-${{ inputs.data_mode }}
+          path: action_output
+          if-no-files-found: error
+          retention-days: 30
