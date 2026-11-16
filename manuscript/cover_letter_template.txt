@@ -1,0 +1,23 @@
+[Date]
+
+Editor-in-Chief
+Journal of Transport Geography
+
+Dear Editor,
+
+Please consider the manuscript entitled “Reliability or continuity? How measurement changes the geography of New York subway elevator service” for publication as a research article in Journal of Transport Geography.
+
+The manuscript examines a measurement problem with a direct spatial consequence. Using 46,400 elevator-month observations from the New York City subway, it compares the Metropolitan Transportation Authority’s reported in-service elevator availability with a calendar service-continuity measure that retains time excluded from the reported denominator. The central finding is not simply that the two percentages differ. The difference is geographically structured: denominator choice changes which station complexes are identified as persistently low-reliability locations, while adjacent-year station rankings show substantial persistence.
+
+The paper contributes to current transport-geography research on the sensitivity of accessibility and service diagnostics to measurement choices. It complements recent work on spatial-resolution error, real-time disruptions, and travel-time variability by showing that the temporal denominator of an operational reliability indicator can itself alter place-based diagnosis. The analysis is fully reproducible from public MTA data and uses a CPU-only open workflow.
+
+The manuscript is original, is not under consideration elsewhere, and all authors have approved its submission. [Confirm or revise this sentence before submission.] Any use of generative AI or AI-assisted tools is disclosed in the manuscript in accordance with Elsevier policy.
+
+Thank you for considering the manuscript.
+
+Sincerely,
+
+[Corresponding author]
+[Affiliation]
+[Postal address]
+[Email]
