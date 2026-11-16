@@ -48,6 +48,7 @@ jobs:
           echo "MAIN=data/MTA_NYCT_Subway_Elevator_and_Escalator_Availability__Beginning_2015_20261116.csv" >> "$GITHUB_ENV"
           echo "PLATFORM=data/MTA_Subway_Accessible_Station_Platform_Availability__Beginning_2018_20261116.csv" >> "$GITHUB_ENV"
           echo "STATIONS=data/station_complex_coordinates.csv" >> "$GITHUB_ENV"
+          echo "STATIONS=data/station_complex_coordinates.csv" >> "$GITHUB_ENV"
 
       - name: Download latest official MTA analysis data
         if: env.DATA_MODE == 'latest'
@@ -59,8 +60,12 @@ jobs:
           curl --fail --location --retry 3 --retry-delay 2 \
             "https://data.ny.gov/api/v3/views/thh2-syn7/export.csv?accessType=DOWNLOAD" \
             -o data/latest/platform_availability.csv
+          curl --fail --location --retry 3 --retry-delay 2 \
+            'https://data.ny.gov/resource/5f5g-n3cz.csv?$limit=500' \
+            -o data/latest/station_complexes.csv
           echo "MAIN=data/latest/elevator_availability.csv" >> "$GITHUB_ENV"
           echo "PLATFORM=data/latest/platform_availability.csv" >> "$GITHUB_ENV"
+          echo "STATIONS=data/latest/station_complexes.csv" >> "$GITHUB_ENV"
           echo "STATIONS=data/station_complex_coordinates.csv" >> "$GITHUB_ENV"
 
       - name: Validate Python syntax
