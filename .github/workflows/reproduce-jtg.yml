@@ -55,10 +55,13 @@ jobs:
             -o data/latest/platform_availability.csv
           curl --fail --location --retry 3 --retry-delay 2 \
             'https://data.ny.gov/resource/5f5g-n3cz.csv?$limit=500' \
-            -o data/latest/station_complexes.csv
+            -o data/latest/station_complexes_raw.csv
+          python src/prepare_station_coordinates.py \
+            --input data/latest/station_complexes_raw.csv \
+            --output data/latest/station_complex_coordinates.csv
           echo "MAIN=data/latest/elevator_availability.csv" >> "$GITHUB_ENV"
           echo "PLATFORM=data/latest/platform_availability.csv" >> "$GITHUB_ENV"
-          echo "STATIONS=data/latest/station_complexes.csv" >> "$GITHUB_ENV"
+          echo "STATIONS=data/latest/station_complex_coordinates.csv" >> "$GITHUB_ENV"
 
       - name: Download official NYC borough boundaries
         run: |
@@ -72,6 +75,7 @@ jobs:
           python -m py_compile src/audit.py
           python -m py_compile src/longitudinal_analysis.py
           python -m py_compile src/make_figures.py
+          python -m py_compile src/prepare_station_coordinates.py
 
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
@@ -86,6 +90,12 @@ jobs:
           test -s action_output/results/boundary_month_sensitivity_2025.csv
           test -s action_output/results/chronicity_sensitivity.csv
           test -s action_output/results/loss_decomposition_2025.csv
+          test -s action_output/results/chronicity_threshold_sensitivity.csv
+          test -s action_output/results/rank_stability.csv
+          test -s action_output/results/balanced_panel_system_yearly.csv
+          test -s action_output/results/borough_excluded_concentration_2025.csv
+          test -s action_output/results/platform_comparison.csv
+          test -s action_output/results/platform_rank_concordance_monthly.csv
 
       - name: Reproduce 300 dpi figures
         run: |
@@ -108,9 +118,9 @@ jobs:
               "fig2_metric_gap.png",
               "fig3_reclassification.png",
               "fig4_persistence.png",
-              "fig5_validation.png",
-              "figS1_management_availability.png",
-              "figS2_borough_metric_gap.png",
+              "fig5_concordance.png",
+              "figS1_management_coefficients.png",
+              "figS2_calendar_persistence.png",
           ]
           root = Path("action_output/figures_300dpi")
           for name in expected:
