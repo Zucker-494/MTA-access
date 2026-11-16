@@ -83,6 +83,9 @@ jobs:
             --main "$MAIN" \
             --platform "$PLATFORM" \
             --output action_output/results
+          test -s action_output/results/boundary_month_sensitivity_2025.csv
+          test -s action_output/results/chronicity_sensitivity.csv
+          test -s action_output/results/loss_decomposition_2025.csv
 
       - name: Reproduce 300 dpi figures
         run: |
