@@ -161,7 +161,7 @@ def spatial_figure(ch: pd.DataFrame, stations_path: Path, borough_geojson: Path,
     ax.set_xlim(-74.06, -73.73)
     ax.set_ylim(40.55, 40.93)
     ax.set_axis_off()
-    ax.legend(frameon=False, fontsize=7.5, loc="lower left")
+    ax.legend(frameon=False, fontsize=7.5, loc="upper left")
     plt.tight_layout()
     plt.savefig(out, dpi=300, format="png")
     plt.close()
