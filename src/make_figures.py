@@ -1,7 +1,9 @@
 """Create JTG-oriented 300 dpi figures from verified analysis outputs.
 
-The manuscript uses five main figures plus one supplementary management figure.
-No network access is required when the frozen station-coordinate snapshot is used.
+Five main figures and two supplementary figures are generated. Highlight
+categories are mutually exclusive, annotation text never covers data points,
+and the cross-scale comparison is shown as monthly rank concordance rather
+than an overplotted scatter cloud.
 """
 from __future__ import annotations
 
@@ -10,10 +12,8 @@ import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
 import numpy as np
 import pandas as pd
-from scipy.stats import spearmanr
 
 
 def style() -> None:
@@ -39,41 +39,8 @@ def finish(ax: plt.Axes, path: Path, grid: bool = True) -> None:
     plt.close()
 
 
-def validation_points(main_path: Path, platform_path: Path) -> pd.DataFrame:
-    d = pd.read_csv(main_path, low_memory=False)
-    d["Month"] = pd.to_datetime(d["Month"], errors="coerce")
-    d["24-Hour Hours Available"] = pd.to_numeric(
-        d["24-Hour Hours Available"], errors="coerce"
-    )
-    d["24-Hour Total Hours"] = pd.to_numeric(
-        d["24-Hour Total Hours"], errors="coerce"
-    )
-    e = d[
-        d["Equipment Type"].astype(str).str.strip().str.lower().eq("elevator")
-    ].copy()
-
-    p = pd.read_csv(platform_path)
-    p["month"] = pd.to_datetime(p["month"], errors="coerce")
-    p["availability"] = pd.to_numeric(p["availability"], errors="coerce")
-    p = p[p["borough"].isin(["Bronx", "Brooklyn", "Manhattan", "Queens"])]
-
-    a = e[e["Month"].between(p["month"].min(), p["month"].max())].groupby(
-        ["Month", "Borough"]
-    ).agg(
-        hours_available=("24-Hour Hours Available", "sum"),
-        reported_hours=("24-Hour Total Hours", "sum"),
-    ).reset_index()
-    a["asset_reported"] = (
-        a["hours_available"] / a["reported_hours"].replace(0, np.nan)
-    )
-    return p.merge(
-        a, left_on=["month", "borough"], right_on=["Month", "Borough"], how="inner"
-    )
-
-
-
 def _draw_geometry(ax: plt.Axes, geometry: dict) -> None:
-    """Draw Polygon/MultiPolygon GeoJSON without GIS-library dependencies."""
+    """Draw Polygon/MultiPolygon boundaries without a GIS dependency."""
     typ = geometry.get("type")
     coords = geometry.get("coordinates", [])
     polygons = [coords] if typ == "Polygon" else coords if typ == "MultiPolygon" else []
@@ -81,20 +48,16 @@ def _draw_geometry(ax: plt.Axes, geometry: dict) -> None:
         if not polygon:
             continue
         exterior = np.asarray(polygon[0], dtype=float)
-        if exterior.ndim != 2 or exterior.shape[1] != 2:
-            continue
-        ax.add_patch(Polygon(
-            exterior, closed=True, facecolor="0.96", edgecolor="0.65", linewidth=0.55
-        ))
-        for ring in polygon[1:]:
-            hole = np.asarray(ring, dtype=float)
-            if hole.ndim == 2 and hole.shape[1] == 2:
-                ax.add_patch(Polygon(
-                    hole, closed=True, facecolor="white", edgecolor="0.75", linewidth=0.3
-                ))
+        if exterior.ndim == 2 and exterior.shape[1] == 2:
+            ax.plot(exterior[:, 0], exterior[:, 1], linewidth=0.55, zorder=1)
 
 
-def spatial_figure(ch: pd.DataFrame, stations_path: Path, borough_geojson: Path, out: Path) -> None:
+def spatial_figure(
+    ch: pd.DataFrame,
+    stations_path: Path,
+    borough_geojson: Path,
+    out: Path,
+) -> None:
     st = pd.read_csv(stations_path)
     required = {"complex_id", "latitude", "longitude"}
     missing = required.difference(st.columns)
@@ -117,55 +80,81 @@ def spatial_figure(ch: pd.DataFrame, stations_path: Path, borough_geojson: Path,
 
     chronic = z["continuity_bq_share"] >= 0.50
     reclass = z["bq_reclassification_delta"] >= 0.15
+    category = np.select(
+        [
+            chronic & reclass,
+            chronic & ~reclass,
+            ~chronic & reclass,
+        ],
+        ["Both diagnostics", "Persistent low continuity", "Strong reclassification"],
+        default="Other long-observed complex",
+    )
+    z["map_category"] = category
 
     with open(borough_geojson, "r", encoding="utf-8") as fh:
         gj = json.load(fh)
 
-    fig, ax = plt.subplots(figsize=(5.5, 6.0))
+    fig, ax = plt.subplots(figsize=(7.4, 6.0))
     for feature in gj.get("features", []):
         _draw_geometry(ax, feature.get("geometry", {}))
 
-    ax.scatter(
-        z["longitude"], z["latitude"], s=14, alpha=0.30,
-        label="Long-observed elevator complex"
-    )
-    ax.scatter(
-        z.loc[chronic, "longitude"], z.loc[chronic, "latitude"],
-        s=70, facecolors="none", linewidths=1.2,
-        label="Continuity bottom quartile in ≥50% of months"
-    )
-    ax.scatter(
-        z.loc[reclass, "longitude"], z.loc[reclass, "latitude"],
-        s=54, marker="x", linewidths=1.2,
-        label="Reclassification increase ≥0.15"
-    )
+    specs = [
+        ("Other long-observed complex", "o", 17),
+        ("Persistent low continuity", "^", 48),
+        ("Strong reclassification", "s", 48),
+        ("Both diagnostics", "*", 80),
+    ]
+    for label, marker, size in specs:
+        g = z[z["map_category"] == label]
+        if g.empty:
+            continue
+        ax.scatter(
+            g["longitude"], g["latitude"],
+            s=size, marker=marker, label=label, zorder=3,
+        )
+
     mean_lat = float(z["latitude"].mean())
     ax.set_aspect(1 / np.cos(np.deg2rad(mean_lat)))
 
-    # Standard cartographic elements requested by JTG editorial guidance.
     xmin, xmax = z["longitude"].min(), z["longitude"].max()
     ymin, ymax = z["latitude"].min(), z["latitude"].max()
     x0 = xmin + 0.04 * (xmax - xmin)
     y0 = ymin + 0.04 * (ymax - ymin)
     km5_lon = 5.0 / (111.32 * np.cos(np.deg2rad(mean_lat)))
     ax.plot([x0, x0 + km5_lon], [y0, y0], linewidth=1.4, zorder=6)
-    ax.text(x0 + km5_lon / 2, y0 + 0.012 * (ymax - ymin),
-            "5 km", ha="center", va="bottom", fontsize=7.5)
+    ax.text(
+        x0 + km5_lon / 2,
+        y0 + 0.012 * (ymax - ymin),
+        "5 km",
+        ha="center",
+        va="bottom",
+        fontsize=7.5,
+    )
     ax.annotate(
-        "N", xy=(0.94, 0.96), xytext=(0.94, 0.86),
-        xycoords="axes fraction", textcoords="axes fraction",
-        ha="center", va="center",
-        arrowprops=dict(arrowstyle="-|>", linewidth=0.9), fontsize=8.5,
+        "N",
+        xy=(0.94, 0.96),
+        xytext=(0.94, 0.86),
+        xycoords="axes fraction",
+        textcoords="axes fraction",
+        ha="center",
+        va="center",
+        arrowprops=dict(arrowstyle="-|>", linewidth=0.9),
+        fontsize=8.5,
     )
 
     ax.set_xlim(-74.06, -73.73)
     ax.set_ylim(40.55, 40.93)
     ax.set_axis_off()
-    ax.legend(frameon=False, fontsize=7.5, loc="upper left")
+    ax.legend(
+        frameon=False,
+        fontsize=7.5,
+        loc="upper left",
+        bbox_to_anchor=(1.01, 1.0),
+        borderaxespad=0,
+    )
     plt.tight_layout()
     plt.savefig(out, dpi=300, format="png")
     plt.close()
-
 
 
 def main() -> None:
@@ -182,116 +171,115 @@ def main() -> None:
     style()
 
     ys = pd.read_csv(args.results / "system_yearly.csv")
-    yb = pd.read_csv(args.results / "borough_yearly.csv")
-    ym = pd.read_csv(args.results / "management_yearly.csv")
     ch = pd.read_csv(args.results / "complex_chronicity.csv")
     rs = pd.read_csv(args.results / "rank_stability.csv")
-    vp = validation_points(args.main, args.platform)
+    concord = pd.read_csv(
+        args.results / "platform_rank_concordance_monthly.csv",
+        parse_dates=["month"],
+    )
+    reg = pd.read_csv(args.results / "management_regression.csv")
 
-    # Fig. 1 — spatial chronicity and metric-induced reclassification.
+    # Figure 1 — spatial chronicity and metric-induced reclassification.
     spatial_figure(
-        ch, args.stations, args.borough_boundaries,
-        args.output / "fig1_spatial.png"
+        ch,
+        args.stations,
+        args.borough_boundaries,
+        args.output / "fig1_spatial.png",
     )
 
-    # Fig. 2 — central measurement gap.
+    # Figure 2 — central measurement gap.
     fig, ax = plt.subplots(figsize=(6.4, 3.9))
     ax.plot(
-        ys["year"], 100 * ys["reported_availability"], marker="o",
-        label="Reported in-service availability"
+        ys["year"],
+        100 * ys["reported_availability"],
+        marker="o",
+        label="MTA-reported availability",
     )
     ax.plot(
-        ys["year"], 100 * ys["calendar_continuity"], marker="s",
-        label="Calendar service continuity"
+        ys["year"],
+        100 * ys["calendar_continuity"],
+        marker="s",
+        label="Calendar continuity",
     )
     ax.set_xlabel("Year")
-    ax.set_ylabel("Availability / continuity (%)")
+    ax.set_ylabel("Service measure (%)")
     ax.legend(frameon=False, loc="upper left")
     ax.set_xticks(ys["year"])
     ax.tick_params(axis="x", rotation=45)
     finish(ax, args.output / "fig2_metric_gap.png")
 
-    # Fig. 3 — chronicity reclassification.
+    # Figure 3 — chronicity reclassification. Names remain in manuscript text,
+    # so the plot carries no labels that could obscure observations.
     fig, ax = plt.subplots(figsize=(5.4, 4.8))
-    ax.scatter(ch["reported_bq_share"], ch["continuity_bq_share"], s=26, alpha=0.72)
-    hi = max(ch["reported_bq_share"].max(), ch["continuity_bq_share"].max()) * 1.04
+    ax.scatter(
+        ch["reported_bq_share"],
+        ch["continuity_bq_share"],
+        s=26,
+        alpha=0.72,
+    )
+    hi = max(
+        ch["reported_bq_share"].max(),
+        ch["continuity_bq_share"].max(),
+    ) * 1.04
     ax.plot([0, hi], [0, hi], "--", linewidth=1.0, label="No change")
-    labels = {
-        328: "Cortlandt St",
-        635: "South Ferry / Whitehall St",
-        620: "Court St / Borough Hall",
-    }
-    top = ch.nlargest(3, "bq_reclassification_delta")
-    for _, row in top.iterrows():
-        cid = int(row["Station Complex MRN"])
-        label = labels.get(cid, str(cid))
-        ax.annotate(
-            label,
-            (row["reported_bq_share"], row["continuity_bq_share"]),
-            xytext=(5, 4), textcoords="offset points", fontsize=7.3
-        )
     ax.set_xlim(0, hi)
     ax.set_ylim(0, hi)
-    ax.set_xlabel("Bottom-quartile recurrence\nreported availability")
-    ax.set_ylabel("Bottom-quartile recurrence\ncalendar continuity")
+    ax.set_xlabel("Low-reliability recurrence\nMTA-reported availability")
+    ax.set_ylabel("Low-reliability recurrence\ncalendar continuity")
     ax.legend(frameon=False, loc="lower right")
     finish(ax, args.output / "fig3_reclassification.png")
 
-    # Fig. 4 — adjacent-year persistence.
+    # Figure 4 — adjacent-year persistence for the operator-reported baseline.
+    r = rs[
+        (rs["metric"] == "reported_availability")
+        & (rs["month_window"] == "available year")
+    ].copy()
+    labels = [f"{a}–{b}" for a, b in zip(r["year_1"], r["year_2"])]
     fig, ax = plt.subplots(figsize=(6.2, 3.7))
-    labels = [f"{a}–{b}" for a, b in zip(rs["year_1"], rs["year_2"])]
-    ax.plot(range(len(rs)), rs["spearman_rho"], marker="o")
+    ax.plot(range(len(r)), r["spearman_rho"], marker="o")
     ax.set_xticks(range(len(labels)), labels, rotation=45, ha="right")
     ax.set_ylim(0, 0.8)
     ax.set_xlabel("Adjacent year pair")
     ax.set_ylabel("Spearman rank correlation")
-    ax.text(
-        0.02, 0.94, f"Mean ρ = {rs['spearman_rho'].mean():.2f}",
-        transform=ax.transAxes, va="top"
-    )
     finish(ax, args.output / "fig4_persistence.png")
 
-    # Fig. 5 — external cross-scale validation.
-    fig, ax = plt.subplots(figsize=(5.3, 4.8))
-    for borough, g in vp.groupby("borough"):
-        ax.scatter(
-            100 * g["availability"], 100 * g["asset_reported"],
-            s=21, alpha=0.66, label=borough
-        )
-    mn = min((100 * vp["availability"]).min(), (100 * vp["asset_reported"]).min())
-    mx = max((100 * vp["availability"]).max(), (100 * vp["asset_reported"]).max())
-    ax.plot([mn, mx], [mn, mx], "--", linewidth=1.0, label="1:1")
-    ax.set_xlabel("Accessible-platform availability (%)")
-    ax.set_ylabel("Aggregated elevator availability (%)")
-    ax.legend(frameon=False, fontsize=7.5, loc="upper left")
-    rho, _ = spearmanr(vp["asset_reported"], vp["availability"])
-    ax.text(0.03, 0.04, f"Spearman ρ = {rho:.2f}", transform=ax.transAxes)
-    finish(ax, args.output / "fig5_validation.png")
-
-    # Supplementary descriptive governance trend.
+    # Figure 5 — monthly spatial concordance between asset and platform metrics.
+    # One observation per month avoids the overplotting in the previous
+    # borough-month scatter representation.
     fig, ax = plt.subplots(figsize=(6.4, 3.9))
-    for manager, g in ym.groupby("Managed By"):
-        ax.plot(
-            g["year"], 100 * g["reported_availability"],
-            marker="o", label=manager
-        )
-    ax.set_xlabel("Year")
-    ax.set_ylabel("Reported availability (%)")
-    ax.legend(frameon=False, loc="lower left")
-    ax.set_xticks(sorted(ym["year"].unique()))
-    ax.tick_params(axis="x", rotation=45)
-    finish(ax, args.output / "figS1_management_availability.png")
+    ax.plot(concord["month"], concord["kendall_tau"])
+    ax.set_xlabel("Month")
+    ax.set_ylabel("Kendall rank concordance")
+    ax.set_ylim(-1.05, 1.05)
+    finish(ax, args.output / "fig5_concordance.png")
 
-    # Supplementary borough heterogeneity in the denominator gap.
-    fig, ax = plt.subplots(figsize=(6.4, 3.9))
-    for borough, g in yb.groupby("Borough"):
-        ax.plot(g["year"], g["metric_gap_pp"], marker="o", label=borough)
-    ax.set_xlabel("Year")
-    ax.set_ylabel("Availability-continuity gap (pp)")
-    ax.legend(frameon=False, ncol=2, loc="upper left")
-    ax.set_xticks(sorted(yb["year"].unique()))
-    ax.tick_params(axis="x", rotation=45)
-    finish(ax, args.output / "figS2_borough_metric_gap.png")
+    # Supplementary Figure S1 — governance coefficients, not overlapping trends.
+    fig, ax = plt.subplots(figsize=(6.5, 4.2))
+    y = np.arange(len(reg))
+    coef = 100 * reg["third_party_coef"]
+    lo = 100 * reg["ci_low"]
+    hi_ci = 100 * reg["ci_high"]
+    xerr = np.vstack([coef - lo, hi_ci - coef])
+    ax.errorbar(coef, y, xerr=xerr, fmt="o", capsize=3)
+    ax.set_yticks(y, reg["model"])
+    ax.set_xlabel("Third-party coefficient (percentage points)")
+    ax.set_ylabel("")
+    ax.invert_yaxis()
+    finish(ax, args.output / "figS1_management_coefficients.png", grid=False)
+
+    # Supplementary Figure S2 — calendar-continuity rank persistence.
+    rc = rs[
+        (rs["metric"] == "calendar_continuity")
+        & (rs["month_window"] == "available year")
+    ].copy()
+    labels_c = [f"{a}–{b}" for a, b in zip(rc["year_1"], rc["year_2"])]
+    fig, ax = plt.subplots(figsize=(6.2, 3.7))
+    ax.plot(range(len(rc)), rc["spearman_rho"], marker="o")
+    ax.set_xticks(range(len(labels_c)), labels_c, rotation=45, ha="right")
+    ax.set_ylim(0, 0.8)
+    ax.set_xlabel("Adjacent year pair")
+    ax.set_ylabel("Spearman rank correlation")
+    finish(ax, args.output / "figS2_calendar_persistence.png")
 
 
 if __name__ == "__main__":
