@@ -1,0 +1,2 @@
+n_borough_months,pearson_r,spearman_rho,mae_percentage_points,asset_minus_platform_bias_pp,months_with_exact_four_borough_ranking,months_total,exact_ranking_share,mean_kendall_tau,share_borough_month_positions_changed
+420,0.6712329545,0.6969424025,1.225660055,0.761068740,11,105,0.1047619048,0.2857142857,0.6452380952
