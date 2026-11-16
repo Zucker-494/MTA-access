@@ -26,15 +26,15 @@ where $A_{it}$ is MTA-reported availability, $T_i$ indicates third-party managem
 \centering
 \caption{Exploratory association between third-party management and MTA-reported elevator availability.}
 \label{tab:s1}
-\small
-\begin{tabular}{lrrrr}
+\footnotesize
+\begin{tabular}{@{}p{0.46\linewidth}rrrr@{}}
 \toprule
-Specification & $N$ & Complexes & Coef. (pp) & $p$ \\
+Specification & $N$ & Cpx. & Coef. (pp) & $p$ \\
 \midrule
-Month + borough FE; elevator-clustered SE & 45,005 & 133 & -4.43 & 0.0005 \\
-Month + complex FE; elevator-clustered SE & 45,005 & 133 & -4.99 & 0.0055 \\
-Month + complex FE; complex-clustered SE & 45,005 & 133 & -4.99 & 0.0066 \\
-Mixed complexes; elevator-clustered SE & 10,429 & 13 & -4.92 & 0.0063 \\
+Month + borough FE; elevator-clustered & 45,005 & 133 & -4.43 & 0.0005 \\
+Month + complex FE; elevator-clustered & 45,005 & 133 & -4.99 & 0.0055 \\
+Month + complex FE; complex-clustered & 45,005 & 133 & -4.99 & 0.0066 \\
+Mixed complexes; elevator-clustered & 10,429 & 13 & -4.92 & 0.0063 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -67,10 +67,11 @@ Table~\ref{tab:s2} varies the minimum longitudinal-coverage requirement. The ass
 \centering
 \caption{Sensitivity to minimum longitudinal coverage.}
 \label{tab:s2}
-\small
-\begin{tabular}{rrrrr}
+\footnotesize
+\begin{threeparttable}
+\begin{tabular}{@{}rrrrr@{}}
 \toprule
-Minimum months & Complexes & Spearman $\rho$ & $\Delta\geq0.15$ & Continuity recurrence $\geq0.50$ \\
+Min. months & $N$ & $\rho$ & $\Delta\geq0.15$ & $C\geq0.50$ \\
 \midrule
 24 & 117 & 0.873 & 3 & 7 \\
 36 & 113 & 0.877 & 3 & 7 \\
@@ -79,6 +80,11 @@ Minimum months & Complexes & Spearman $\rho$ & $\Delta\geq0.15$ & Continuity rec
 72 & 105 & 0.863 & 3 & 7 \\
 \bottomrule
 \end{tabular}
+\begin{tablenotes}
+\raggedright\scriptsize
+\item $N$: eligible complexes; $\Delta\geq0.15$: complexes with recurrence increase at least 0.15; $C\geq0.50$: complexes in the calendar-continuity low-reliability quartile in at least half of observed months.
+\end{tablenotes}
+\end{threeparttable}
 \end{table}
 
 Table~\ref{tab:s3} varies the descriptive low-reliability cut point. The recurrence measures remain positively associated under all three definitions. Cortlandt Street, South Ferry/Whitehall Street, and Court Street/Borough Hall exceed a recurrence increase of 0.15 under the quintile, quartile, and tercile definitions.
@@ -87,16 +93,22 @@ Table~\ref{tab:s3} varies the descriptive low-reliability cut point. The recurre
 \centering
 \caption{Sensitivity to the descriptive low-reliability threshold.}
 \label{tab:s3}
-\small
-\begin{tabular}{lrrr}
+\footnotesize
+\begin{threeparttable}
+\begin{tabular}{@{}lrrr@{}}
 \toprule
-Threshold & Spearman $\rho$ & $\Delta\geq0.15$ complexes & Continuity recurrence $\geq0.50$ \\
+Threshold & $\rho$ & $\Delta\geq0.15$ & $C\geq0.50$ \\
 \midrule
 Bottom quintile & 0.814 & 5 & 3 \\
 Bottom quartile & 0.877 & 3 & 7 \\
 Bottom tercile & 0.906 & 3 & 19 \\
 \bottomrule
 \end{tabular}
+\begin{tablenotes}
+\raggedright\scriptsize
+\item $\Delta\geq0.15$: complexes with recurrence increase at least 0.15; $C\geq0.50$: complexes in the calendar-continuity low-reliability category in at least half of observed months.
+\end{tablenotes}
+\end{threeparttable}
 \end{table}
 
 \end{document}
