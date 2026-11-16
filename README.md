@@ -16,11 +16,11 @@ The project deliberately does not claim novelty for passenger OD impacts of elev
 
 ## Research questions
 
-1. How large and spatially variable is the gap between MTA-reported in-service elevator availability and calendar service continuity?
-2. Does denominator choice change which station complexes are identified as chronically low-reliability places?
-3. Are relative station-complex reliability rankings persistent across years?
-4. Do asset-level and official accessible-platform indicators yield the same spatial ordering?
-5. As a secondary explanatory analysis, is maintenance governance associated with reported asset availability after temporal and station-complex controls?
+1. How large and spatially variable is the gap between MTA-reported elevator availability and calendar continuity?
+2. Does denominator choice change which station complexes are identified as persistently low-reliability locations, and are those rankings stable across years?
+3. How closely does the asset-level geography correspond to the MTA's accessible-platform availability metric at borough scale?
+
+Maintenance governance is retained only as an exploratory supplementary analysis.
 
 ## Data
 
@@ -65,12 +65,13 @@ NYC accessibility reporting notes that elevator availability excludes elevators 
 - 2025 calendar service continuity: **90.20%**
 - difference: **7.41 percentage points**
 - 2025 Bronx gap: **15.77 percentage points**
-- mean adjacent-year Spearman correlation of station-complex reported-availability rankings: **0.562**
-- third-party coefficient with month and station-complex fixed effects: **−4.99 pp** (secondary associational result)
+- mean adjacent-year Spearman correlation of station-complex MTA-reported rankings: **0.562**
+- mean adjacent-year Spearman correlation of calendar-continuity rankings: **0.525**
 - asset-level vs official accessible-platform availability: Spearman rho **0.697**
 - exact four-borough ranking agreement: **11/105 months (10.5%)**
+- South Ferry/Whitehall Street recurrence after missing-value correction: **12.4% → 29.6%**
 
-Management results are observational and are not interpreted causally.
+The maintenance-governance coefficient remains available in the Supplementary Material and is interpreted only as an observational association.
 
 ## Reproducibility
 
