@@ -6,7 +6,7 @@ The two measures are close in some years and widely separated in others (Fig.~\r
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.92\linewidth]{Fig01_reported_vs_calendar_continuity.png}
+\includegraphics[width=0.92\linewidth]{fig2_metric_gap.png}
 \caption{Annual MTA-reported in-service elevator availability and calendar service continuity, 2015--2026. The 2026 observation covers January--October. Calendar continuity retains calendar time excluded from the reported denominator.}
 \label{fig:trend}
 \end{figure}
@@ -18,9 +18,10 @@ The gap was also geographically uneven. Table~\ref{tab:borough2025} shows the 20
 \caption{Borough-level elevator service measures, 2025.}
 \label{tab:borough2025}
 \begin{threeparttable}
+\small
 \begin{tabular}{lrrr}
 \toprule
-Borough & Reported availability (\%) & Calendar continuity (\%) & Gap (pp) \\
+Borough & Reported (\%) & Calendar (\%) & Gap (pp) \\
 \midrule
 Bronx & 97.46 & 81.70 & 15.77 \\
 Brooklyn & 98.41 & 90.30 & 8.11 \\
@@ -43,7 +44,7 @@ The effect is not limited to the system average. Among station complexes with at
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.78\linewidth]{Fig00_spatial_chronicity_map.png}
+\includegraphics[width=0.78\linewidth]{fig1_spatial.png}
 \caption{Spatial distribution of long-observed elevator-equipped station complexes. Larger points indicate complexes falling in the lowest calendar-continuity quartile in at least 50\% of observed months. Crosses indicate a rise of at least 0.15 in bottom-quartile recurrence when calendar continuity replaces reported availability. Scale bar: 5 km. Station coordinates are from MTA station reference data.}
 \label{fig:map}
 \end{figure}
@@ -52,7 +53,7 @@ The strongest reclassification occurred at Cortlandt Street (complex 328). Under
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.72\linewidth]{Fig02_complex_reclassification.png}
+\includegraphics[width=0.72\linewidth]{fig3_reclassification.png}
 \caption{Station-complex recurrence in the monthly lowest reliability quartile under reported availability and calendar service continuity. Points above the diagonal are classified as low-reliability more often when denominator-excluded hours are retained.}
 \label{fig:reclass}
 \end{figure}
@@ -65,7 +66,7 @@ Station-complex rankings are not random from one year to the next. All eleven ad
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.92\linewidth]{Fig04_adjacent_year_rank_persistence.png}
+\includegraphics[width=0.92\linewidth]{fig4_persistence.png}
 \caption{Spearman rank correlation of station-complex reported availability in adjacent years. Only complexes with at least six observed months in each year are included.}
 \label{fig:persistence}
 \end{figure}
@@ -80,9 +81,10 @@ Third-party-managed elevators have lower reported availability after temporal an
 \centering
 \caption{Association between third-party management and reported elevator availability.}
 \label{tab:reg}
-\begin{tabular}{lrrrr}
+\small
+\begin{tabular}{p{0.43\linewidth}rrrr}
 \toprule
-Model & Observations & Complexes & Coefficient (pp) & $p$ \\
+Model & $N$ & Complexes & Coef. (pp) & $p$ \\
 \midrule
 Month + borough fixed effects & 45,005 & 133 & -4.43 & 0.0005 \\
 Month + station-complex fixed effects & 45,005 & 133 & -4.99 & 0.0055 \\
@@ -99,7 +101,7 @@ The equipment-level and platform-level metrics are positively related during the
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.72\linewidth]{Fig06_asset_vs_platform_validation.png}
+\includegraphics[width=0.72\linewidth]{fig5_validation.png}
 \caption{Comparison of aggregated elevator reported availability and MTA accessible-platform availability during the overlapping 2018--2026 period. Each point is a borough--month.}
 \label{fig:validation}
 \end{figure}
