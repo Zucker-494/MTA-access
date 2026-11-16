@@ -4,11 +4,13 @@ This directory contains the figure files used by the current Journal of Transpor
 
 ## Main-text figures
 
-1. `fig1_spatial.png` — station-complex chronicity and denominator-induced reclassification.
-2. `fig2_metric_gap.png` — annual reported availability versus calendar service continuity.
-3. `fig3_reclassification.png` — station-complex bottom-quartile recurrence under the two metrics.
-4. `fig4_persistence.png` — adjacent-year persistence of station-complex reliability rankings.
-5. `fig5_validation.png` — asset-level availability versus official accessible-platform availability.
+The filenames reflect the analysis workflow; manuscript numbering follows order of appearance:
+
+- **Figure 1:** `fig2_metric_gap.png` — annual reported availability versus calendar service continuity.
+- **Figure 2:** `fig1_spatial.png` — station-complex chronicity and denominator-induced reclassification.
+- **Figure 3:** `fig3_reclassification.png` — station-complex bottom-quartile recurrence under the two metrics.
+- **Figure 4:** `fig4_persistence.png` — adjacent-year persistence of station-complex reliability rankings.
+- **Figure 5:** `fig5_validation.png` — asset-level availability versus official accessible-platform availability.
 
 ## Supplementary figures
 
