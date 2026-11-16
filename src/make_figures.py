@@ -260,8 +260,14 @@ def main() -> None:
     lo = 100 * reg["ci_low"]
     hi_ci = 100 * reg["ci_high"]
     xerr = np.vstack([coef - lo, hi_ci - coef])
+    labels = [
+        "Borough FE; elevator-clustered",
+        "Complex FE; elevator-clustered",
+        "Complex FE; complex-clustered",
+        "Mixed complexes; elevator-clustered",
+    ]
     ax.errorbar(coef, y, xerr=xerr, fmt="o", capsize=3)
-    ax.set_yticks(y, reg["model"])
+    ax.set_yticks(y, labels)
     ax.set_xlabel("Third-party coefficient (percentage points)")
     ax.set_ylabel("")
     ax.invert_yaxis()
