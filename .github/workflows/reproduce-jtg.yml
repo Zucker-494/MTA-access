@@ -1,6 +1,11 @@
 name: Reproduce JTG analysis
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/run-jtg-reproduction"
   workflow_dispatch:
     inputs:
       data_mode:
@@ -34,17 +39,23 @@ jobs:
         run: python -m pip install -r requirements.txt
 
       - name: Select requested data mode
-        run: echo "DATA_MODE=${{ inputs.data_mode }}" >> "$GITHUB_ENV"
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "DATA_MODE=${{ inputs.data_mode }}" >> "$GITHUB_ENV"
+          else
+            echo "DATA_MODE=frozen" >> "$GITHUB_ENV"
+          fi
 
       - name: Select frozen submission snapshots
-        if: inputs.data_mode == 'frozen'
+        if: env.DATA_MODE == 'frozen'
         run: |
           echo "MAIN=data/MTA_NYCT_Subway_Elevator_and_Escalator_Availability__Beginning_2015_20261116.csv" >> "$GITHUB_ENV"
           echo "PLATFORM=data/MTA_Subway_Accessible_Station_Platform_Availability__Beginning_2018_20261116.csv" >> "$GITHUB_ENV"
           echo "STATIONS=data/station_complex_coordinates.csv" >> "$GITHUB_ENV"
 
       - name: Download latest official MTA data
-        if: inputs.data_mode == 'latest'
+        if: env.DATA_MODE == 'latest'
         run: |
           mkdir -p data/latest
           curl --fail --location --retry 3 --retry-delay 2 \
