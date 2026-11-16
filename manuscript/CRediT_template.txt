@@ -1,0 +1,11 @@
+CRediT authorship contribution statement
+
+Complete after the final author list is fixed.
+
+[Author 1]: Conceptualization; Data curation; Formal analysis; Investigation; Methodology; Software; Validation; Visualization; Writing – original draft; Writing – review & editing.
+
+[Author 2, if applicable]: [select only roles actually performed].
+
+[Author 3, if applicable]: [select only roles actually performed].
+
+Do not assign roles to an author who did not perform them. Keep author order identical to the manuscript and submission system.
