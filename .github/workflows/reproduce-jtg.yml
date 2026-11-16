@@ -9,16 +9,13 @@ on:
   workflow_dispatch:
     inputs:
       data_mode:
-        description: "Use the frozen submission snapshot or download the latest MTA releases"
+        description: "Use frozen submission data or the latest official MTA releases"
         required: true
         default: "frozen"
         type: choice
         options:
           - frozen
           - latest
-  push:
-    paths:
-      - RUN_PIPELINE
 
 permissions:
   contents: read
@@ -47,25 +44,37 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "DATA_MODE=${{ inputs.data_mode }}" >> "$GITHUB_ENV"
           else
-            echo "DATA_MODE=latest" >> "$GITHUB_ENV"
+            echo "DATA_MODE=frozen" >> "$GITHUB_ENV"
           fi
 
-      - name: Select frozen snapshots
+      - name: Select frozen submission snapshots
         if: env.DATA_MODE == 'frozen'
         run: |
           echo "MAIN=data/MTA_NYCT_Subway_Elevator_and_Escalator_Availability__Beginning_2015_20261116.csv" >> "$GITHUB_ENV"
           echo "PLATFORM=data/MTA_Subway_Accessible_Station_Platform_Availability__Beginning_2018_20261116.csv" >> "$GITHUB_ENV"
-          echo "STATIONS=data/station_complex_coordinates.csv" >> "$GITHUB_ENV"
 
-      - name: Download latest official MTA data
+      - name: Download latest official MTA analysis data
         if: env.DATA_MODE == 'latest'
         run: |
           mkdir -p data/latest
-          curl --fail --location --retry 3 --retry-delay 2             "https://data.ny.gov/api/v3/views/rc78-7x78/export.csv?accessType=DOWNLOAD"             -o data/latest/elevator_availability.csv
-          curl --fail --location --retry 3 --retry-delay 2             "https://data.ny.gov/api/v3/views/thh2-syn7/export.csv?accessType=DOWNLOAD"             -o data/latest/platform_availability.csv
+          curl --fail --location --retry 3 --retry-delay 2 \
+            "https://data.ny.gov/api/v3/views/rc78-7x78/export.csv?accessType=DOWNLOAD" \
+            -o data/latest/elevator_availability.csv
+          curl --fail --location --retry 3 --retry-delay 2 \
+            "https://data.ny.gov/api/v3/views/thh2-syn7/export.csv?accessType=DOWNLOAD" \
+            -o data/latest/platform_availability.csv
           echo "MAIN=data/latest/elevator_availability.csv" >> "$GITHUB_ENV"
           echo "PLATFORM=data/latest/platform_availability.csv" >> "$GITHUB_ENV"
-          echo "STATIONS=data/station_complex_coordinates.csv" >> "$GITHUB_ENV"
+
+      - name: Download official spatial reference data
+        run: |
+          mkdir -p data/reference
+          curl --fail --location --retry 3 --retry-delay 2 \
+            'https://data.ny.gov/resource/5f5g-n3cz.csv?$limit=500' \
+            -o data/reference/mta_station_complexes.csv
+          curl --fail --location --retry 3 --retry-delay 2 \
+            'https://data.cityofnewyork.us/resource/gthc-hcne.geojson?$limit=5' \
+            -o data/reference/nyc_borough_boundaries.geojson
 
       - name: Validate Python syntax
         run: |
@@ -79,11 +88,20 @@ jobs:
       - name: Reproduce numerical analysis
         run: |
           rm -rf action_output
-          python src/longitudinal_analysis.py             --main "$MAIN"             --platform "$PLATFORM"             --output action_output/results
+          python src/longitudinal_analysis.py \
+            --main "$MAIN" \
+            --platform "$PLATFORM" \
+            --output action_output/results
 
       - name: Reproduce 300 dpi figures
         run: |
-          python src/make_figures.py             --results action_output/results             --main "$MAIN"             --platform "$PLATFORM"             --stations "$STATIONS"             --output action_output/figures_300dpi
+          python src/make_figures.py \
+            --results action_output/results \
+            --main "$MAIN" \
+            --platform "$PLATFORM" \
+            --stations data/reference/mta_station_complexes.csv \
+            --borough-boundaries data/reference/nyc_borough_boundaries.geojson \
+            --output action_output/figures_300dpi
 
       - name: Verify figure outputs
         run: |
@@ -92,13 +110,13 @@ jobs:
           from PIL import Image
 
           expected = [
-              "fig1_spatial.png",
-              "fig2_metric_gap.png",
-              "fig3_reclassification.png",
-              "fig4_persistence.png",
-              "fig5_validation.png",
-              "figS1_management_availability.png",
-              "figS2_borough_metric_gap.png",
+              "Fig00_spatial_chronicity_map.png",
+              "Fig01_reported_vs_calendar_continuity.png",
+              "Fig02_complex_reclassification.png",
+              "Fig03_borough_metric_gap.png",
+              "Fig04_adjacent_year_rank_persistence.png",
+              "Fig05_management_availability_trend.png",
+              "Fig06_asset_vs_platform_validation.png",
           ]
           root = Path("action_output/figures_300dpi")
           for name in expected:
@@ -114,7 +132,10 @@ jobs:
 
       - name: Record provenance
         run: |
-          sha256sum "$MAIN" "$PLATFORM" "$STATIONS" > action_output/input_sha256.txt
+          sha256sum "$MAIN" "$PLATFORM" \
+            data/reference/mta_station_complexes.csv \
+            data/reference/nyc_borough_boundaries.geojson \
+            > action_output/input_sha256.txt
           {
             echo "data_mode=$DATA_MODE"
             echo "run_commit=$GITHUB_SHA"
