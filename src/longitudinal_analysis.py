@@ -1,6 +1,6 @@
 """Longitudinal MTA elevator service-continuity analysis.
 
-CPU-only reproducible analysis for the Journal of Transport Geography manuscript.
+Longitudinal analysis of New York subway elevator availability and calendar service continuity.
 
 Primary distinction
 -------------------
