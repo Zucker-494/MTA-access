@@ -1,0 +1,4 @@
+Reliability denominator choice changes the geography of subway service loss.
+Calendar continuity was 7.4 points below reported availability in 2025.
+Station-complex reliability rankings persist across consecutive years.
+Asset and platform metrics rarely give the same borough reliability ranking.
