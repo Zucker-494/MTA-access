@@ -151,6 +151,44 @@ def loss_decomposition_2025(e: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def boundary_month_sensitivity_2025(e: pd.DataFrame) -> pd.DataFrame:
+    """Test whether partial first/last asset months drive 2025 continuity."""
+    x = e.copy()
+    bounds = x.groupby("Equipment Code")["Month"].agg(
+        first_observed_month="min",
+        last_observed_month="max",
+    ).reset_index()
+    x = x.merge(bounds, on="Equipment Code", how="left", validate="many_to_one")
+
+    primary = x[x["Month"].dt.year == 2025].copy()
+    trimmed = x[
+        (x["Month"] != x["first_observed_month"])
+        & (x["Month"] != x["last_observed_month"])
+        & (x["Month"].dt.year == 2025)
+    ].copy()
+
+    def summarize(label: str, g: pd.DataFrame) -> dict:
+        available = g["24-Hour Hours Available"].sum()
+        calendar = g["calendar_hours"].sum()
+        return {
+            "scenario": label,
+            "n_observations": len(g),
+            "n_equipment": g["Equipment Code"].nunique(),
+            "hours_available": available,
+            "calendar_hours": calendar,
+            "calendar_continuity": available / calendar,
+        }
+
+    out = pd.DataFrame([
+        summarize("Primary", primary),
+        summarize("Exclude first and last observed month per elevator", trimmed),
+    ])
+    out["difference_from_primary_pp"] = 100 * (
+        out["calendar_continuity"] - out.loc[0, "calendar_continuity"]
+    )
+    return out
+
+
 def rank_stability(cm: pd.DataFrame) -> pd.DataFrame:
     x = cm.copy()
     x["year"] = x["Month"].dt.year
@@ -267,6 +305,9 @@ def main() -> None:
     chronicity(cm, 36).to_csv(out/"complex_chronicity.csv", index=False)
     chronicity_sensitivity(cm).to_csv(out/"chronicity_sensitivity.csv", index=False)
     loss_decomposition_2025(e).to_csv(out/"loss_decomposition_2025.csv", index=False)
+    boundary_month_sensitivity_2025(e).to_csv(
+        out/"boundary_month_sensitivity_2025.csv", index=False
+    )
     rank_stability(cm).to_csv(out/"rank_stability.csv", index=False)
     management_models(e).to_csv(out/"management_regression.csv", index=False)
     platform_validation(e, args.platform).to_csv(out/"platform_validation.csv", index=False)
