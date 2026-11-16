@@ -1,0 +1,54 @@
+\section{Discussion}
+
+\subsection{The spatial consequence of a reliability denominator}
+
+The main result is straightforward: a high operational availability percentage does not uniquely describe the continuity of accessible transport service. Reported elevator availability and calendar service continuity are both valid for their intended questions, but they encode different treatment of time. When excluded periods are spatially uneven, metric choice becomes a transport-geographical issue because it changes the places identified as persistently disadvantaged. This finding is consistent with a wider turn in accessibility research toward testing what an indicator actually represents. Recent JTG work shows that alternative measurement frameworks can expose service deficits hidden by conventional accessibility scores \citep{schroth2026}, while reviews of perceived accessibility similarly document mismatches between calculated indicators and the accessibility experienced or perceived by users \citep{negm2025}. Our result operates at a narrower infrastructure layer, but the methodological implication is the same: conclusions about spatial disadvantage depend on the measurement construct.
+
+This extends the broader literature on scheduled versus realised accessibility. \citet{liu2024} and \citet{nichols2024} show that disruptions and recurring delays can reduce the accessibility that public transport actually delivers relative to timetable-based expectations. \citet{braga2026} shows that travel-time variability can change inequality estimates. Our results identify an analogous issue at the infrastructure layer. The gap does not arise from timetable uncertainty; it arises from how operational time is counted for vertical access assets. Yet the spatial implication is similar: a supply-side metric that is appropriate for one monitoring purpose can understate the burden relevant to another.
+
+The 2025 Bronx result illustrates this point. Reported elevator availability remained above 97\%, which by itself suggests a highly reliable service. Calendar continuity was about 82\%. A passenger-facing interpretation of the system should not collapse these two numbers into one. The first indicates that elevators performed well during the time included in the availability denominator. The second indicates that a larger share of calendar time was not available for elevator service. For transport equity, both are relevant.
+
+\subsection{Persistent places rather than isolated failures}
+
+The adjacent-year correlations add a second dimension. Reliability disadvantage persists. That does not mean the same stations are always worst, nor does it identify a single mechanism. It does mean that repeated low ranking is common enough to be geographically structured.
+
+This distinction matters for intervention. An occasional outage can be treated as a systemwide maintenance risk. A station complex that repeatedly falls into the low-reliability tail requires a place-based explanation. Possible mechanisms include asset age, station complexity, replacement programmes, exposure to weather, ownership, and maintenance responsibility. The management results indicate that governance should be part of that explanation, although the present analysis cannot isolate a causal effect.
+
+The reclassification results are also important for prioritisation. Cortlandt Street looks relatively unproblematic under the published availability ranking but becomes a persistent low-continuity location when calendar exclusions are retained. In a monitoring system that uses only the reported rate, such a location is less likely to be identified as a chronic reliability concern. This is precisely the type of ``spatial so what'' that a transport-geographical analysis needs: the measurement convention changes the geography of the policy problem.
+
+\subsection{Implications for accessible transport monitoring}
+
+The practical implication is not to replace existing reliability KPIs. Operators need conditional reliability indicators because maintenance teams need to know how equipment performs while in operational service. A separate continuity indicator would answer a complementary question: how consistently can users expect the asset to be available over calendar time?
+
+A two-indicator reporting framework could therefore separate \emph{in-service reliability} from \emph{service continuity}. The first would retain the operator's existing denominator. The second would explicitly count long replacement and other excluded periods. Reporting both at station or station-complex level would make spatial persistence visible and would reduce the risk that a high systemwide average obscures concentrated local service loss.
+
+For people with mobility disabilities, this distinction has a direct accessibility meaning. \citet{liu2023} demonstrates that transit accessibility and usage already differ substantially for mobility-disabled travellers. \citet{arai2026} shows that formal elevator provision does not eliminate additional within-station travel burdens. Our findings add a temporal dimension: even where vertical access exists, the continuity of that access varies across places and time.
+
+\subsection{Why the platform comparison matters}
+
+The comparison with accessible-platform availability provides a useful external check. The moderate-to-strong correlation confirms that equipment reliability is related to higher-level step-free service. The frequent ranking disagreement shows why asset-level results should not be interpreted as a direct substitute for passenger accessibility.
+
+This difference strengthens, rather than weakens, the measurement argument. Public transport accessibility is multi-layered. Asset condition, platform availability, network connectivity, service reliability, and passenger destinations operate at different spatial and functional scales. A single KPI cannot represent all of them. The analytical task is therefore to match the metric to the question and to test whether conclusions are stable when the scale or denominator changes.
+
+\section{Limitations}
+
+Four limitations define the scope of the findings. First, calendar continuity treats all calendar hours outside the reported denominator as unavailable asset service. This is appropriate for a sensitivity analysis of continuous asset provision, but it does not reveal why the time was excluded. Planned replacement, major capital work, temporary alternative arrangements, and other states may have different passenger implications.
+
+Second, the analysis is conducted at equipment and station-complex levels. It does not reconstruct complete street-to-platform vertical paths or origin--destination journeys. An unavailable elevator can be redundant at one station and a single point of failure at another. The results therefore concern the geography of elevator service continuity, not the probability that an individual trip is step-free.
+
+Third, the management analysis is observational. Complex and month fixed effects remove substantial spatial and temporal confounding, and the mixed-management sensitivity analysis gives a similar estimate, but management responsibility is not randomly assigned.
+
+Fourth, the platform availability comparison is aggregated to borough level because that is the granularity of the published historical indicator. Future work could combine the continuity measure with station-level path redundancy, passenger flows, and contemporaneous outage logs to estimate passenger-weighted consequences while preserving the distinction between capital replacement and routine reliability.
+
+\section{Conclusions}
+
+This paper asks a simple transport-geographical question: does the way elevator reliability is measured change where accessible transport service appears unreliable? Using 46,400 monthly elevator records from the New York City subway, the answer is yes.
+
+Reported in-service availability was consistently higher than calendar service continuity, and the gap was strongly uneven across years and boroughs. In 2025, the systemwide difference was 7.41 percentage points and reached 15.77 points in the Bronx. Station-complex rankings also showed substantial year-to-year persistence, indicating that low reliability is geographically structured rather than entirely episodic. For several complexes, retaining denominator-excluded time substantially increased the frequency with which they were identified as chronically low-reliability places. Third-party management was associated with lower reported availability even within station-complex and month controls. Finally, asset and platform metrics were correlated but rarely produced the same spatial ordering of boroughs.
+
+The wider implication is methodological. Accessibility monitoring should distinguish the reliability of infrastructure while it is counted as in service from the continuity of the service available to travellers over time. When those denominators differ systematically across space, measurement becomes part of the geography of transport disadvantage.
+
+\section*{Data availability}
+
+The two primary datasets are publicly available from New York State Open Data through the Metropolitan Transportation Authority. Reproducible processing and figure-generation code will be archived with the manuscript repository. The analysis uses a frozen data snapshot downloaded on 16 November 2026; the repository workflow is designed to retrieve newer official releases separately so that the submitted results remain reproducible.
+

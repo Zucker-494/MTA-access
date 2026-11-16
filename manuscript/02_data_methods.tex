@@ -1,0 +1,58 @@
+\section{Data and methods}
+
+\subsection{Data}
+
+The primary source is the MTA NYCT Subway Elevator and Escalator Availability dataset \citep{mta_availability2026}. We use the version downloaded on 16 November 2026. After filtering to elevators, the analytical file contains 46,400 equipment--month observations representing 420 elevators at 133 station complexes between January 2015 and October 2026. The equipment--month key contains no duplicates. The data include equipment identifiers, station and station-complex identifiers, borough, management responsibility, outage counts, hours available, reported total hours, and the published 24-hour availability rate.
+
+We verified the published percentage directly. For every observation with a positive reported denominator,
+\begin{equation}
+A_{it} = \frac{H^{\mathrm{avail}}_{it}}{H^{\mathrm{reported}}_{it}},
+\end{equation}
+where $A_{it}$ is the published 24-hour availability for elevator $i$ in month $t$. The reconstructed value matches the published field to numerical precision.
+
+The second source is the MTA Subway Accessible Station Platform Availability dataset \citep{mta_platform2026}. It reports, by month and borough from 2018 onward, the percentage of time that the average accessible platform is available to passengers requiring step-free access. The uploaded snapshot contains 525 borough--month observations. We use the four subway boroughs---Bronx, Brooklyn, Manhattan, and Queens---for comparison with the elevator data.
+
+Station-complex coordinates used for mapping were obtained from the MTA station reference data and aggregated to the complex level. The spatial analysis is restricted to complexes with sufficient longitudinal coverage for chronicity assessment.
+
+\subsection{Reported availability and calendar service continuity}
+
+The central methodological distinction concerns the denominator. The published availability measure uses hours included in the MTA's reported service denominator. We construct a second measure using the total number of hours in the calendar month:
+\begin{equation}
+C_{it} = \frac{H^{\mathrm{avail}}_{it}}{H^{\mathrm{calendar}}_{t}},
+\end{equation}
+where $H^{\mathrm{calendar}}_{t}$ equals 24 times the number of days in month $t$.
+
+We call $C_{it}$ \emph{calendar service continuity}. It is deliberately not labelled ``true availability''. The two metrics address different questions. $A_{it}$ measures reliability conditional on the operator's reported denominator; $C_{it}$ measures the share of the calendar month during which the asset is recorded as available. Their difference is
+\begin{equation}
+G_{it} = A_{it} - C_{it}.
+\end{equation}
+A positive $G_{it}$ indicates time that is absent from the reported availability denominator. This can include periods associated with major replacement or other excluded states. The MTA's public accessibility reporting confirms that planned replacement periods are excluded from the published elevator availability rate \citep{mopd2025}.
+
+System, borough, and station-complex aggregates are hours-weighted. For a group $g$, we sum available hours and the relevant denominator before taking the ratio, rather than averaging percentages across assets.
+
+\subsection{Spatial persistence and chronic disadvantage}
+
+For each station complex and month, we calculate both reported availability and calendar continuity from the combined elevator hours at that complex. Within each month, station complexes are ranked separately by the two metrics. A complex is classified in the low-reliability quartile if it falls in the lowest 25\% of observed complexes for that month.
+
+For each complex with at least 36 observed months, we then calculate the proportion of months spent in the lowest quartile under each metric. This converts one-off outages into a longitudinal measure of chronic disadvantage. The difference between the two recurrence shares measures reclassification caused by the denominator choice.
+
+To test whether relative reliability is persistent through time, we aggregate reported availability by complex and year and calculate Spearman rank correlations between consecutive years. A persistent positive correlation means that places with relatively low reliability in one year also tend to rank relatively low in the next.
+
+\subsection{Maintenance governance}
+
+The dataset distinguishes elevators managed by NYCT from those managed by third parties. The sample contains 369 NYCT-managed elevators and 51 third-party-managed elevators. We estimate the association between management type and reported availability using
+\begin{equation}
+A_{it} = \beta T_i + \alpha_t + \gamma_s + \varepsilon_{it},
+\end{equation}
+where $T_i$ indicates third-party management, $\alpha_t$ are month fixed effects, and $\gamma_s$ are station-complex fixed effects. Standard errors are clustered by elevator. The complex fixed effects compare management types within the same broader station environment while month effects absorb system-wide temporal shocks.
+
+Because management type is not randomly assigned, $\beta$ is interpreted as an association rather than a causal effect. As a sensitivity analysis, we repeat the model only for the 13 station complexes that contain observations from both management types.
+
+\subsection{Cross-scale validation}
+
+Finally, we examine whether equipment-level availability and the agency's accessible-platform availability metric provide the same spatial diagnosis. Elevator observations are aggregated to borough--month reported availability and merged with the official platform metric for the overlapping period. We report Pearson and Spearman correlations, mean absolute error, and the frequency with which the two metrics produce the same ordering of all four boroughs. The ranking comparison is important because transport-geographical interpretation often depends less on a citywide mean than on which places are identified as relatively better or worse served.
+
+\subsection{Sensitivity checks}
+
+Three checks address choices that could otherwise drive the calendar-continuity result mechanically. First, we decompose calendar service loss into two additive components: unavailable hours inside the MTA-reported denominator and hours excluded from that denominator. This shows whether the observed gap reflects ordinary outages or the treatment of excluded time. Second, we remove the first and last observed month of each elevator, reducing the possibility that partial installation or retirement months inflate calendar exposure. Third, we repeat the chronicity analysis using minimum longitudinal-coverage thresholds of 24, 36, 48, 60, and 72 months. A spatial reclassification is treated as robust when its direction and substantive threshold remain stable across these alternatives.
+
