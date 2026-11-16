@@ -6,9 +6,11 @@ No network access is required when the frozen station-coordinate snapshot is use
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
 import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
@@ -69,7 +71,30 @@ def validation_points(main_path: Path, platform_path: Path) -> pd.DataFrame:
     )
 
 
-def spatial_figure(ch: pd.DataFrame, stations_path: Path, out: Path) -> None:
+
+def _draw_geometry(ax: plt.Axes, geometry: dict) -> None:
+    """Draw Polygon/MultiPolygon GeoJSON without GIS-library dependencies."""
+    typ = geometry.get("type")
+    coords = geometry.get("coordinates", [])
+    polygons = [coords] if typ == "Polygon" else coords if typ == "MultiPolygon" else []
+    for polygon in polygons:
+        if not polygon:
+            continue
+        exterior = np.asarray(polygon[0], dtype=float)
+        if exterior.ndim != 2 or exterior.shape[1] != 2:
+            continue
+        ax.add_patch(Polygon(
+            exterior, closed=True, facecolor="0.96", edgecolor="0.65", linewidth=0.55
+        ))
+        for ring in polygon[1:]:
+            hole = np.asarray(ring, dtype=float)
+            if hole.ndim == 2 and hole.shape[1] == 2:
+                ax.add_patch(Polygon(
+                    hole, closed=True, facecolor="white", edgecolor="0.75", linewidth=0.3
+                ))
+
+
+def spatial_figure(ch: pd.DataFrame, stations_path: Path, borough_geojson: Path, out: Path) -> None:
     st = pd.read_csv(stations_path)
     required = {"complex_id", "latitude", "longitude"}
     missing = required.difference(st.columns)
@@ -93,7 +118,13 @@ def spatial_figure(ch: pd.DataFrame, stations_path: Path, out: Path) -> None:
     chronic = z["continuity_bq_share"] >= 0.50
     reclass = z["bq_reclassification_delta"] >= 0.15
 
+    with open(borough_geojson, "r", encoding="utf-8") as fh:
+        gj = json.load(fh)
+
     fig, ax = plt.subplots(figsize=(5.5, 6.0))
+    for feature in gj.get("features", []):
+        _draw_geometry(ax, feature.get("geometry", {}))
+
     ax.scatter(
         z["longitude"], z["latitude"], s=14, alpha=0.30,
         label="Long-observed elevator complex"
@@ -108,8 +139,6 @@ def spatial_figure(ch: pd.DataFrame, stations_path: Path, out: Path) -> None:
         s=54, marker="x", linewidths=1.2,
         label="Reclassification increase ≥0.15"
     )
-    ax.set_xlabel("Longitude")
-    ax.set_ylabel("Latitude")
     mean_lat = float(z["latitude"].mean())
     ax.set_aspect(1 / np.cos(np.deg2rad(mean_lat)))
 
@@ -129,10 +158,10 @@ def spatial_figure(ch: pd.DataFrame, stations_path: Path, out: Path) -> None:
         arrowprops=dict(arrowstyle="-|>", linewidth=0.9), fontsize=8.5,
     )
 
+    ax.set_xlim(-74.06, -73.73)
+    ax.set_ylim(40.55, 40.93)
+    ax.set_axis_off()
     ax.legend(frameon=False, fontsize=7.5, loc="lower left")
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.grid(alpha=0.12, linewidth=0.5)
     plt.tight_layout()
     plt.savefig(out, dpi=300, format="png")
     plt.close()
@@ -145,6 +174,7 @@ def main() -> None:
     ap.add_argument("--main", type=Path, required=True)
     ap.add_argument("--platform", type=Path, required=True)
     ap.add_argument("--stations", type=Path, required=True)
+    ap.add_argument("--borough-boundaries", type=Path, required=True)
     ap.add_argument("--output", type=Path, required=True)
     args = ap.parse_args()
 
@@ -159,7 +189,10 @@ def main() -> None:
     vp = validation_points(args.main, args.platform)
 
     # Fig. 1 — spatial chronicity and metric-induced reclassification.
-    spatial_figure(ch, args.stations, args.output / "fig1_spatial.png")
+    spatial_figure(
+        ch, args.stations, args.borough_boundaries,
+        args.output / "fig1_spatial.png"
+    )
 
     # Fig. 2 — central measurement gap.
     fig, ax = plt.subplots(figsize=(6.4, 3.9))
