@@ -264,7 +264,10 @@ def main() -> None:
     annual_metrics(e, "Managed By").to_csv(out/"management_yearly.csv", index=False)
     annual_metrics(e, "Borough").to_csv(out/"borough_yearly.csv", index=False)
     cm.to_csv(out/"complex_month.csv", index=False)
-    chronicity(cm, 36).to_csv(out/"complex_chronicity.csv", index=False)\n    chronicity_sensitivity(cm).to_csv(out/"chronicity_sensitivity.csv", index=False)\n    loss_decomposition_2025(e).to_csv(out/"loss_decomposition_2025.csv", index=False)\n    rank_stability(cm).to_csv(out/"rank_stability.csv", index=False)
+    chronicity(cm, 36).to_csv(out/"complex_chronicity.csv", index=False)
+    chronicity_sensitivity(cm).to_csv(out/"chronicity_sensitivity.csv", index=False)
+    loss_decomposition_2025(e).to_csv(out/"loss_decomposition_2025.csv", index=False)
+    rank_stability(cm).to_csv(out/"rank_stability.csv", index=False)
     management_models(e).to_csv(out/"management_regression.csv", index=False)
     platform_validation(e, args.platform).to_csv(out/"platform_validation.csv", index=False)
 
