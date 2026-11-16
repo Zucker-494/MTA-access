@@ -1,11 +1,6 @@
 name: Reproduce JTG analysis
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/run-jtg-reproduction"
   workflow_dispatch:
     inputs:
       data_mode:
@@ -44,7 +39,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "DATA_MODE=${{ inputs.data_mode }}" >> "$GITHUB_ENV"
           else
-            echo "DATA_MODE=latest" >> "$GITHUB_ENV"
+            echo "DATA_MODE=frozen" >> "$GITHUB_ENV"
           fi
 
       - name: Select frozen submission snapshots
