@@ -112,6 +112,9 @@ jobs:
 
       - name: Publish verified outputs
         run: |
+          git fetch origin main
+          git rebase origin/main
+
           rm -f             figures/fig5_validation.png             figures/figS1_management_availability.png             figures/figS2_borough_metric_gap.png             results/platform_validation.csv
           cp action_output/figures/*.png figures/
           cp action_output/results/*.csv results/
