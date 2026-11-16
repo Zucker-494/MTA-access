@@ -73,16 +73,6 @@ jobs:
           python -m py_compile src/longitudinal_analysis.py
           python -m py_compile src/make_figures.py
 
-      - name: Download official spatial reference data
-        run: |
-          mkdir -p data/reference
-          curl --fail --location --retry 3 \
-            'https://data.ny.gov/resource/5f5g-n3cz.csv?$limit=500' \
-            -o data/reference/mta_station_complexes.csv
-          curl --fail --location --retry 3 \
-            'https://data.cityofnewyork.us/resource/gthc-hcne.geojson?$limit=5' \
-            -o data/reference/nyc_borough_boundaries.geojson
-
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
 
