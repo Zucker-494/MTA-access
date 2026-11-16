@@ -1,44 +1,47 @@
 # JTG submission checklist
 
-Status legend: [x] complete; [ ] requires final author input or submission-stage action.
+Status legend: [x] complete; [ ] requires final author input or a submission-stage decision.
 
 ## Scientific manuscript
-- [x] Primary paper message is measurement choice -> spatial reclassification -> persistent disadvantage.
+- [x] Primary message fixed: measurement choice -> spatial reclassification -> persistent disadvantage.
 - [x] Frozen analysis uses 46,400 elevator-month observations, 420 elevators and 133 complexes.
-- [x] Main numerical claims are reproduced from public MTA data.
-- [x] Management analysis is framed as associational, not causal.
-- [x] Recent nearest-neighbour JTG literature is included.
-- [x] Generative-AI use is disclosed before the references.
-- [x] Data-availability statement is included.
+- [x] Main numerical claims and robustness checks are reproduced from public MTA data.
+- [x] Boundary-month sensitivity is implemented in the primary analysis script and stored as a result table.
+- [x] Chronicity sensitivity corrected to rho = 0.853–0.868 across 24–72 month thresholds.
+- [x] Management analysis is framed as associational.
+- [x] Recent nearest-neighbour literature is included.
+- [x] Citation audit: 18 cited keys, 18 BibTeX entries, 0 missing and 0 uncited.
+- [x] Data-availability and generative-AI declarations are included.
 
-## JTG / Elsevier formatting
-- [x] Elsevier elsarticle LaTeX structure.
-- [x] Author-year references.
-- [x] Double-anonymized manuscript separated from title page.
+## JTG / Elsevier working format
+- [x] Elsevier `elsarticle` LaTeX with author-year references.
+- [x] Double-anonymized manuscript separated from title-page template.
 - [x] Six English keywords.
-- [x] Four highlights; each <=85 characters including spaces.
-- [x] Five main figures supplied as separate files.
-- [x] Separate figure-caption file prepared.
-- [x] Tables are editable LaTeX, not images.
-- [ ] Recompile the final flat submission package after the final author/title-page details are filled.
+- [x] Four highlights; each is 70–76 characters including spaces.
+- [x] Five main figures are supplied separately as 300 dpi PNGs.
+- [x] Two supplementary figures are stored separately.
+- [x] Independent figure-caption file matches manuscript numbering.
+- [x] Tables are editable LaTeX.
+- [x] Working manuscript compiles to 25 pages with no undefined citation/reference and no overfull box.
+- [x] Working manuscript length is approximately 6061 words by `texcount`.
+- [x] PDF preflight passes and all 25 pages were visually rendered for inspection.
+- [x] GitHub Actions workflow is manual-only.
 
 ## Title page — final author input required
-- [ ] Final author list and author order.
-- [ ] Full affiliation postal address(es).
-- [ ] Corresponding author email.
-- [ ] Corresponding author full postal address.
-- [ ] Corresponding author phone number if requested by the submission system.
-- [ ] Acknowledgements.
-- [ ] Funding statement.
-- [ ] Declaration of interests confirmed.
-- [ ] CRediT roles confirmed for every author.
+- [ ] Confirm final author list and author order.
+- [ ] Fill corresponding-author email.
+- [ ] Confirm whether any additional affiliations are needed.
+- [ ] Confirm acknowledgements.
+- [ ] Confirm funding statement.
+- [ ] Confirm declaration of competing interests.
+- [ ] Confirm CRediT roles for every final author.
 
 ## Submission declarations
 - [ ] Confirm manuscript is not under consideration elsewhere.
-- [ ] Confirm all authors approve submission.
-- [ ] Confirm repository visibility / archival plan for code at submission.
-- [ ] Choose subscription publication or open access according to funding requirements.
+- [ ] Confirm all final authors approve submission.
+- [ ] Decide repository visibility and archival DOI/URL for the submission or accepted version.
+- [ ] Choose subscription or open-access publication route according to funding requirements.
 
 ## Optional
-- [ ] Graphical abstract. JTG encourages one but does not require it.
-- [ ] Suggested reviewers, if requested by Editorial Manager.
+- [ ] Graphical abstract.
+- [ ] Suggested reviewers if Editorial Manager requests them.
