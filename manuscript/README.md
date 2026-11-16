@@ -1,45 +1,40 @@
 # JTG manuscript workspace
 
-Primary target: **Journal of Transport Geography**.
+Primary target: **Journal of Transport Geography**
 
 Working title:
 
 **Reliability or continuity? How measurement changes the geography of New York subway elevator service**
 
-The blinded manuscript uses Elsevier's `elsarticle` class with author-year references. The title page is kept separate for double-anonymized review.
+The primary paper message is now fixed:
 
-## Manuscript files
+**operational denominator choice -> spatial reclassification -> longitudinal persistence**
 
-- `manuscript_blind.tex` — blinded master LaTeX file.
-- `01_introduction_background.tex` — introduction and conceptual background.
-- `02_data_methods.tex` — data, measurement framework, spatial analysis, and reproducibility.
-- `03_results.tex` — verified empirical results and sensitivity checks.
-- `04_discussion_conclusion.tex` — discussion, transferability, limitations, and conclusions.
-- `references.bib` — BibTeX database.
-- `highlights.txt` — four JTG/Elsevier highlights.
-- `figure_captions.txt` — separate caption file in manuscript figure-number order.
-- `title_page_template.tex` — non-blinded title-page template.
+Maintenance governance has been moved to a separate exploratory Supplementary Material analysis.
+
+## Main source files
+
+- `manuscript_blind.tex` — double-anonymized master manuscript.
+- `01_introduction_background.tex` — measurement problem and JTG positioning.
+- `02_data_methods.tex` — data, corrected chronicity handling, spatial comparison, and robustness design.
+- `03_results.tex` — corrected empirical results.
+- `04_discussion_conclusion.tex` — service-side interpretation, transferability, limitations, and conclusions.
+- `supplementary_material.tex` — governance analysis, calendar-continuity persistence, and chronicity sensitivity.
+- `references.bib` — cited references and official data sources.
+- `figure_captions.txt` — separate main-figure captions in manuscript order.
+- `highlights.txt` — Elsevier highlights.
+- `title_page_template.tex` — non-blinded title-page template; author details remain for manual completion.
 - `cover_letter_template.txt` — working cover letter.
-- `CRediT_template.txt` — authorship-contribution template.
+- `CRediT_template.txt` — author-contribution template.
 - `submission_checklist.md` — final author-input and submission checks.
 
 ## Figures
 
-The repository `figures/` directory contains the five 300 dpi main-text PNGs and two supplementary PNGs.
+The repository `figures/` directory contains five main-text PNGs and two supplementary PNGs at 300 dpi. The revised graphics were explicitly redesigned to avoid label and data overplotting.
 
-Manuscript order is:
+## Flat working package
 
-1. `fig2_metric_gap.png`
-2. `fig1_spatial.png`
-3. `fig3_reclassification.png`
-4. `fig4_persistence.png`
-5. `fig5_validation.png`
-
-The two supplementary graphics are `figS1_management_availability.png` and `figS2_borough_metric_gap.png`.
-
-## Flat Editorial Manager working package
-
-After figures are reproduced, run:
+Run:
 
 ```bash
 python manuscript/build_submission.py \
@@ -47,8 +42,17 @@ python manuscript/build_submission.py \
   --output submission_flat
 ```
 
-The script creates one flat working directory containing the manuscript source, bibliography, submission-support files, five main figures, and two supplementary figures. Compile and visually inspect the PDF before upload.
+The resulting directory contains the manuscript sources, submission-support files, five main figures, two supplementary figures, and the supplementary LaTeX source at one directory level.
 
-## Reproducibility status
+## Reproducibility
 
-The numerical pipeline is CPU-only. A successful frozen-data workflow reproduced the five main figures and two supplementary figures at 300 dpi and published those verified PNGs to the repository. The GitHub Actions workflow is now manual-only, so normal manuscript or code commits do not consume Actions minutes.
+The corrected numerical pipeline preserves missing MTA-reported availability rather than coding it as a non-low-reliability month. It also produces:
+
+- longitudinal-coverage and low-threshold sensitivity tables;
+- persistence for MTA-reported availability and calendar continuity;
+- January–October partial-year sensitivity;
+- a 2015–2025 common-asset panel;
+- borough excluded-time concentration;
+- cross-scale borough rank concordance.
+
+Station coordinates are generated directly from official MTA dataset `5f5g-n3cz`. The core analysis uses the frozen 16 November 2026 data snapshot. The normal reproduction workflow is manual-only.
