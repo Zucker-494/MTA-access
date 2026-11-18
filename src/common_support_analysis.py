@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.stats import spearmanr
 
 
 def screening_sets(cm: pd.DataFrame, q: float):
@@ -74,6 +75,25 @@ def recurrence(flags: pd.DataFrame, min_months: int = 36):
     return out.sort_values("recurrence_difference").reset_index(drop=True)
 
 
+def coverage_sensitivity(flags: pd.DataFrame):
+    rows = []
+    for min_months in [24, 36, 48, 60, 72]:
+        rec = recurrence(flags, min_months=min_months)
+        rho, _ = spearmanr(
+            rec["reported_recurrence"], rec["continuity_recurrence"]
+        )
+        top = rec.nlargest(3, "recurrence_difference")
+        rows.append({
+            "min_months": min_months,
+            "eligible_complexes": len(rec),
+            "spearman_recurrence": rho,
+            "largest_complex_id": int(top.iloc[0]["Station Complex MRN"]),
+            "second_complex_id": int(top.iloc[1]["Station Complex MRN"]),
+            "third_complex_id": int(top.iloc[2]["Station Complex MRN"]),
+        })
+    return pd.DataFrame(rows)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--complex-month", required=True)
@@ -86,6 +106,7 @@ def main():
 
     summaries = []
     quartile = None
+    quartile_flags = None
 
     for q, label in [
         (0.20, "bottom quintile"),
@@ -107,12 +128,16 @@ def main():
         })
         if np.isclose(q, 0.25):
             quartile = rec
+            quartile_flags = flags
 
     pd.DataFrame(summaries).to_csv(
         outdir / "common_support_screening_summary.csv", index=False
     )
     quartile.to_csv(
         outdir / "common_support_recurrence_quartile.csv", index=False
+    )
+    coverage_sensitivity(quartile_flags).to_csv(
+        outdir / "common_support_coverage_sensitivity.csv", index=False
     )
 
 
