@@ -64,6 +64,9 @@ The script writes:
 
 - `results/common_support_screening_summary.csv`
 - `results/common_support_recurrence_quartile.csv`
+- `results/common_support_coverage_sensitivity.csv`
+
+The coverage sensitivity repeats the bottom-quartile recurrence analysis with minimum comparable-month requirements of 24, 36, 48, 60 and 72 months.
 
 Station-complex coordinates can be prepared from the official station dataset with `src/prepare_station_coordinates.py`.
 
