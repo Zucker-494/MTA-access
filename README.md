@@ -60,11 +60,13 @@ python src/common_support_analysis.py \
 
 For each month, the common-support set contains station complexes for which both MTA-reported availability and calendar continuity are defined. For screening share `q`, the target count is `floor(q * N_common)`; the same count is applied to both indicator rankings. Station-complex ID is the deterministic secondary ordering for exact metric ties.
 
-The script writes:
+The script writes the screening results used in the TR-A manuscript:
 
 - `results/common_support_screening_summary.csv`
 - `results/common_support_recurrence_quartile.csv`
 - `results/common_support_coverage_sensitivity.csv`
+
+Earlier `chronicity_*` files are retained for analysis provenance; the TR-A monitoring results are taken from the `common_support_*` outputs above.
 
 The coverage sensitivity repeats the bottom-quartile recurrence analysis with minimum comparable-month requirements of 24, 36, 48, 60 and 72 months.
 
