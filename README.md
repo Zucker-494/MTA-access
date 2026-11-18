@@ -41,16 +41,15 @@ Install the required Python packages:
 python -m pip install -r requirements.txt
 ```
 
-Run the longitudinal preprocessing and descriptive analysis:
+Run the TR-A descriptive and sensitivity workflow:
 
 ```bash
-python src/longitudinal_analysis.py \
+python src/tra_main_analysis.py \
   --main data/MTA_NYCT_Subway_Elevator_and_Escalator_Availability__Beginning_2015_20261116.csv \
-  --platform data/MTA_Subway_Accessible_Station_Platform_Availability__Beginning_2018_20261116.csv \
   --output results
 ```
 
-The TR-A manuscript uses **common-support fixed-capacity screening**. Run:
+Then run the **common-support fixed-capacity screening** used for the monitoring analysis:
 
 ```bash
 python src/common_support_analysis.py \
@@ -66,7 +65,7 @@ The script writes the screening results used in the TR-A manuscript:
 - `results/common_support_recurrence_quartile.csv`
 - `results/common_support_coverage_sensitivity.csv`
 
-Earlier `chronicity_*` files are retained for analysis provenance; the TR-A monitoring results are taken from the `common_support_*` outputs above.
+The older `longitudinal_analysis.py`, `chronicity_*` and platform-comparison files are retained for analysis provenance. The TR-A manuscript is reproduced with `tra_main_analysis.py` plus `common_support_analysis.py`, and its monitoring results are taken from the `common_support_*` outputs above.
 
 The coverage sensitivity repeats the bottom-quartile recurrence analysis with minimum comparable-month requirements of 24, 36, 48, 60 and 72 months.
 
