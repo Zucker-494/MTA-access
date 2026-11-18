@@ -1,6 +1,6 @@
 # New York subway elevator service continuity
 
-This repository contains the data and analysis files used to examine how the temporal denominator of an elevator-service indicator affects spatial diagnosis across the New York City subway.
+This repository contains the frozen data and analysis files used to examine how the temporal denominator of an elevator-service indicator affects transport infrastructure monitoring across the New York City subway.
 
 ## Data
 
@@ -22,9 +22,9 @@ The frozen analysis uses data downloaded on 16 November 2026 and covers January 
 Two equipment-level measures are compared:
 
 - **MTA-reported availability**: hours available divided by the denominator hours reported by the MTA.
-- **Calendar service continuity**: hours available divided by the full calendar hours of each observed equipment-month.
+- **Calendar continuity**: hours available divided by the full calendar hours of each observed equipment-month.
 
-The comparison is used to examine whether denominator choice changes the numerical level of service indicators and the spatial identification of persistently low-performing station complexes.
+For observations with a positive reported denominator, calendar continuity equals conditional availability multiplied by reported-hour coverage.
 
 ## Repository structure
 
@@ -41,7 +41,7 @@ Install the required Python packages:
 python -m pip install -r requirements.txt
 ```
 
-Run the longitudinal analysis with the frozen MTA files:
+Run the longitudinal preprocessing and descriptive analysis:
 
 ```bash
 python src/longitudinal_analysis.py \
@@ -50,7 +50,22 @@ python src/longitudinal_analysis.py \
   --output results
 ```
 
-Station-complex coordinates can be prepared from the official station dataset with `src/prepare_station_coordinates.py`. Figure-generation code is provided in `src/make_figures.py`.
+The TR-A manuscript uses **common-support fixed-capacity screening**. Run:
+
+```bash
+python src/common_support_analysis.py \
+  --complex-month results/complex_month.csv \
+  --output results
+```
+
+For each month, the common-support set contains station complexes for which both MTA-reported availability and calendar continuity are defined. For screening share `q`, the target count is `floor(q * N_common)`; the same count is applied to both indicator rankings. Station-complex ID is the deterministic secondary ordering for exact metric ties.
+
+The script writes:
+
+- `results/common_support_screening_summary.csv`
+- `results/common_support_recurrence_quartile.csv`
+
+Station-complex coordinates can be prepared from the official station dataset with `src/prepare_station_coordinates.py`.
 
 ## Data provenance
 
