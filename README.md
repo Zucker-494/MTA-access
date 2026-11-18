@@ -9,7 +9,8 @@ The analysis uses public data from the Metropolitan Transportation Authority (MT
 - MTA NYCT Subway Elevator and Escalator Availability: Beginning 2015  
   https://data.ny.gov/d/rc78-7x78
 - MTA Subway Accessible Station Platform Availability: Beginning 2018  
-  https://data.ny.gov/d/thh2-syn7
+  https://data.ny.gov/d/thh2-syn7  
+  Retained for legacy analysis; not used in the TR-A manuscript.
 - MTA Subway Stations and Complexes  
   https://data.ny.gov/d/5f5g-n3cz
 - NYC Department of City Planning Borough Boundaries  
