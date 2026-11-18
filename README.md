@@ -1,56 +1,51 @@
-# New York subway elevator service continuity
+# Reliability denominator design in New York subway elevator monitoring
 
-This repository contains the frozen data and analysis files used to examine how the temporal denominator of an elevator-service indicator affects transport infrastructure monitoring across the New York City subway.
+This repository contains the frozen public data and analysis code used to examine how reliability denominator design changes infrastructure monitoring across New York City subway elevator-equipped station complexes.
 
-## Data
+## Manuscript analysis
 
-The analysis uses public data from the Metropolitan Transportation Authority (MTA) and New York City Department of City Planning:
+The current manuscript compares two measures built from the same available-hours numerator:
+
+- **MTA-reported availability**: available hours divided by MTA-reported denominator hours.
+- **Calendar continuity**: available hours divided by the full calendar hours of each observed elevator-month.
+
+The primary station-complex analysis uses **common support**: only station-complex-months for which both measures are defined enter the monthly ranking. For each screening share, both indicators use the same monthly target count, so changes in the monitoring list reflect indicator definition rather than list size.
+
+## Frozen data
+
+The analysis uses public data downloaded on 16 November 2026 and covers January 2015 through October 2026.
+
+Primary sources:
 
 - MTA NYCT Subway Elevator and Escalator Availability: Beginning 2015  
   https://data.ny.gov/d/rc78-7x78
-- MTA Subway Accessible Station Platform Availability: Beginning 2018  
-  https://data.ny.gov/d/thh2-syn7  
-  Retained for legacy analysis; not used in the TR-A manuscript.
 - MTA Subway Stations and Complexes  
   https://data.ny.gov/d/5f5g-n3cz
 - NYC Department of City Planning Borough Boundaries  
   https://data.cityofnewyork.us/d/gthc-hcne
 
-The frozen analysis uses data downloaded on 16 November 2026 and covers January 2015 through October 2026.
-
-## Measures
-
-Two equipment-level measures are compared:
-
-- **MTA-reported availability**: hours available divided by the denominator hours reported by the MTA.
-- **Calendar continuity**: hours available divided by the full calendar hours of each observed equipment-month.
-
-For observations with a positive reported denominator, calendar continuity equals conditional availability multiplied by reported-hour coverage.
-
-## Repository structure
-
-- `data/` — frozen source data and station-complex coordinates
-- `src/` — analysis and figure-generation scripts
-- `results/` — derived tables used in the analysis
-- `requirements.txt` — Python package requirements
+Frozen copies and derived station-complex coordinates are stored in `data/`.
 
 ## Reproduction
 
-Install the required Python packages:
+Install the Python dependencies:
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-Run the TR-A descriptive and sensitivity workflow:
+### 1. Build the base longitudinal tables
 
 ```bash
-python src/tra_main_analysis.py \
+python src/longitudinal_analysis.py \
   --main data/MTA_NYCT_Subway_Elevator_and_Escalator_Availability__Beginning_2015_20261116.csv \
+  --platform data/MTA_Subway_Accessible_Station_Platform_Availability__Beginning_2018_20261116.csv \
   --output results
 ```
 
-Then run the **common-support fixed-capacity screening** used for the monitoring analysis:
+This step creates the equipment-, annual-, borough-, and station-complex-month tables used by the manuscript. The `--platform` argument is retained because the historical script also reproduces earlier exploratory outputs; those platform-comparison outputs are not used in the current TR-A manuscript.
+
+### 2. Reproduce the common-support monitoring analysis
 
 ```bash
 python src/common_support_analysis.py \
@@ -58,20 +53,25 @@ python src/common_support_analysis.py \
   --output results
 ```
 
-For each month, the common-support set contains station complexes for which both MTA-reported availability and calendar continuity are defined. For screening share `q`, the target count is `floor(q * N_common)`; the same count is applied to both indicator rankings. Station-complex ID is the deterministic secondary ordering for exact metric ties.
+The script writes:
 
-The script writes the screening results used in the TR-A manuscript:
+- `common_support_screening_summary.csv`
+- `common_support_recurrence_quartile.csv`
+- `common_support_coverage_sensitivity.csv`
 
-- `results/common_support_screening_summary.csv`
-- `results/common_support_recurrence_quartile.csv`
-- `results/common_support_coverage_sensitivity.csv`
+These files reproduce the manuscript's bottom-quintile, bottom-quartile and bottom-tercile screening comparisons, station-complex recurrence results, and 24-72 month coverage sensitivity.
 
-The older `longitudinal_analysis.py`, `chronicity_*` and platform-comparison files are retained for analysis provenance. The TR-A manuscript is reproduced with `tra_main_analysis.py` plus `common_support_analysis.py`, and its monitoring results are taken from the `common_support_*` outputs above.
+## Repository structure
 
-The coverage sensitivity repeats the bottom-quartile recurrence analysis with minimum comparable-month requirements of 24, 36, 48, 60 and 72 months.
+- `data/` - frozen public source data and coordinate snapshots
+- `src/longitudinal_analysis.py` - base data preparation, annual metrics and sensitivity analyses
+- `src/common_support_analysis.py` - current common-support fixed-capacity monitoring analysis
+- `src/prepare_station_coordinates.py` - station-complex coordinate preparation
+- `results/` - derived analysis tables
+- `requirements.txt` - Python dependencies
 
-Station-complex coordinates can be prepared from the official station dataset with `src/prepare_station_coordinates.py`.
+Some files in `results/` and the older plotting script are retained for provenance from earlier exploratory work. The TR-A manuscript's screening results are the `common_support_*.csv` outputs generated by the workflow above.
 
 ## Data provenance
 
-All source datasets are public. The copies in `data/` are retained to preserve the exact data state used in the analysis.
+All primary datasets are public. Frozen copies are retained in this repository so that the numerical results can be reproduced from the exact data state used in the manuscript.
